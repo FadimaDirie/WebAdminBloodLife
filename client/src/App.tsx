@@ -5,12 +5,22 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Dashboard from "@/pages/dashboard";
 import NotFound from "@/pages/not-found";
+import UserManagement from "@/pages/user-management";
+import LoginPage from "@/pages/login";
+import DonorsList from "@/pages/donors-list";
+import DonorStats from "@/pages/donor-stats";
+import RecentDonations from "@/pages/recent-donations";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
       <Route path="/dashboard" component={Dashboard} />
+      <Route path="/users" component={UserManagement} />
+      <Route path="/login" component={LoginPage} />
+      <Route path="/donors-list" component={DonorsList} />
+      <Route path="/donor-stats" component={DonorStats} />
+      <Route path="/recent-donations" component={RecentDonations} />
       <Route component={NotFound} />
     </Switch>
   );

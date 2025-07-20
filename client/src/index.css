@@ -9,19 +9,19 @@
   --card-foreground: hsl(240, 10%, 3.9%);
   --popover: hsl(0, 0%, 100%);
   --popover-foreground: hsl(240, 10%, 3.9%);
-  --primary: hsl(207, 90%, 54%);
-  --primary-foreground: hsl(210, 40%, 98%);
-  --secondary: hsl(210, 40%, 96%);
-  --secondary-foreground: hsl(222.2, 84%, 4.9%);
-  --muted: hsl(210, 40%, 96%);
-  --muted-foreground: hsl(215.4, 16.3%, 46.9%);
-  --accent: hsl(210, 40%, 96%);
-  --accent-foreground: hsl(222.2, 84%, 4.9%);
-  --destructive: hsl(0, 84.2%, 60.2%);
-  --destructive-foreground: hsl(210, 40%, 98%);
-  --border: hsl(214.3, 31.8%, 91.4%);
-  --input: hsl(214.3, 31.8%, 91.4%);
-  --ring: hsl(207, 90%, 54%);
+  --primary: hsl(0, 84%, 60%);
+  --primary-foreground: hsl(0, 0%, 98%);
+  --secondary: hsl(0, 84%, 96%);
+  --secondary-foreground: hsl(0, 84%, 20%);
+  --muted: hsl(0, 84%, 96%);
+  --muted-foreground: hsl(0, 84%, 40%);
+  --accent: hsl(0, 84%, 92%);
+  --accent-foreground: hsl(0, 84%, 30%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --border: hsl(0, 84%, 90%);
+  --input: hsl(0, 84%, 90%);
+  --ring: hsl(0, 84%, 60%);
   --radius: 0.5rem;
   
   /* Custom emergency and healthcare colors */
@@ -33,14 +33,14 @@
   --warning-foreground: hsl(0, 0%, 98%);
   
   /* Sidebar colors */
-  --sidebar-background: hsl(207, 90%, 54%);
+  --sidebar-background: hsl(0, 96%, 39%);
   --sidebar-foreground: hsl(0, 0%, 98%);
-  --sidebar-primary: hsl(207, 90%, 54%);
+  --sidebar-primary: hsl(0, 100%, 36%);
   --sidebar-primary-foreground: hsl(0, 0%, 98%);
-  --sidebar-accent: hsl(207, 75%, 64%);
+  --sidebar-accent: hsl(0, 84%, 70%);
   --sidebar-accent-foreground: hsl(0, 0%, 98%);
-  --sidebar-border: hsl(207, 75%, 64%);
-  --sidebar-ring: hsl(207, 90%, 54%);
+  --sidebar-border: hsl(0, 98%, 39%);
+  --sidebar-ring: hsl(0, 84%, 60%);
 }
 
 .dark {
@@ -89,7 +89,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-white text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }

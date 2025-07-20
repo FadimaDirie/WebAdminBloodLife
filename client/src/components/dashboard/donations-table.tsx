@@ -26,6 +26,11 @@ interface Donation {
     id: string;
     avatar?: string;
   };
+  recipient: {
+    name: string;
+    id: string;
+    avatar?: string;
+  };
   bloodType: string;
   date: string;
   location: string;
@@ -117,10 +122,10 @@ export default function DonationsTable({ donations }: DonationsTableProps) {
                   Blood Type
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Donation Date
+                  Location
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Location
+                  Recipient
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
@@ -139,9 +144,9 @@ export default function DonationsTable({ donations }: DonationsTableProps) {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={donation.donor.avatar} />
+                        <AvatarImage src={(donation.donor?.avatar || '/default-profile.png')} />
                         <AvatarFallback>
-                          {donation.donor.name.split(' ').map(n => n[0]).join('')}
+                          {(donation.donor?.name || '-').split(' ').map(n => n[0]).join('')}
                         </AvatarFallback>
                       </Avatar>
                       <div className="ml-4">
@@ -159,11 +164,26 @@ export default function DonationsTable({ donations }: DonationsTableProps) {
                       {donation.bloodType}
                     </Badge>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {donation.date}
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {donation.location}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={donation.recipient?.avatar || '/default-profile.png'} />
+                        <AvatarFallback>
+                          {(donation.recipient?.name || '-').split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-gray-900">
+                          {donation.recipient?.name || 'Unknown'}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {donation.recipient?.id || '-'}
+                        </div>
+                      </div>
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <Badge className={getStatusColor(donation.status)}>

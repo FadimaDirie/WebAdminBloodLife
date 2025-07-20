@@ -1,102 +1,69 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BarChart3, AlertTriangle, Users, Link as LinkIcon, Download } from "lucide-react";
-import { downloadReport } from "@/lib/download-utils";
+import { Download, BarChart2, AlertTriangle, Users, Link2 } from "lucide-react";
 
 const reports = [
   {
+    icon: <BarChart2 className="w-7 h-7 text-blue-500" />, // Donation Analytics
     title: "Donation Analytics",
-    description: "Comprehensive donation trends",
-    lastGenerated: "2 hours ago",
-    icon: BarChart3,
-    bgColor: "bg-blue-100",
-    iconColor: "text-blue-600",
-    type: "pdf"
+    desc: "Comprehensive donation trends",
+    last: "2 hours ago",
+    download: "PDF",
   },
   {
+    icon: <AlertTriangle className="w-7 h-7 text-red-400" />, // Emergency Response
     title: "Emergency Response",
-    description: "Response time analysis",
-    lastGenerated: "4 hours ago",
-    icon: AlertTriangle,
-    bgColor: "bg-red-100",
-    iconColor: "text-red-600",
-    type: "excel"
+    desc: "Response time analysis",
+    last: "4 hours ago",
+    download: "EXCEL",
   },
   {
+    icon: <Users className="w-7 h-7 text-green-500" />, // Donor Engagement
     title: "Donor Engagement",
-    description: "Donor activity patterns",
-    lastGenerated: "1 day ago",
-    icon: Users,
-    bgColor: "bg-green-100",
-    iconColor: "text-green-600",
-    type: "csv"
+    desc: "Donor activity patterns",
+    last: "1 day ago",
+    download: "CSV",
   },
   {
+    icon: <Link2 className="w-7 h-7 text-gray-500" />, // Blockchain Audit
     title: "Blockchain Audit",
-    description: "Transaction verification",
-    lastGenerated: "3 days ago",
-    icon: LinkIcon,
-    bgColor: "bg-gray-100",
-    iconColor: "text-gray-600",
-    type: "pdf"
-  }
+    desc: "Transaction verification",
+    last: "3 days ago",
+    download: "PDF",
+  },
 ];
 
 export default function ReportsSection() {
-  const handleDownload = (reportTitle: string, type: string) => {
-    downloadReport(reportTitle, type);
-  };
-
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Generate Reports</CardTitle>
-        <div className="flex space-x-3">
-          <Button variant="outline" size="sm">
-            Schedule Report
-          </Button>
-          <Button size="sm">
-            Generate Now
-          </Button>
+    <div className="bg-white/80 border border-red-100 rounded-2xl p-8 shadow-xl mt-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+        <h2 className="text-2xl font-bold text-gray-900">Generate Reports</h2>
+        <div className="flex gap-3">
+          <Button variant="outline" className="font-semibold border-red-200 text-red-600 hover:bg-red-50">Schedule Report</Button>
+          <Button className="bg-gradient-to-r from-red-500 to-red-400 text-white font-bold shadow hover:from-red-600 hover:to-red-500">Generate Now</Button>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {reports.map((report, index) => {
-            const Icon = report.icon;
-            return (
-              <div 
-                key={index}
-                className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow cursor-pointer"
-              >
-                <div className="flex items-center space-x-3 mb-3">
-                  <div className={`w-10 h-10 ${report.bgColor} rounded-lg flex items-center justify-center`}>
-                    <Icon className={`w-5 h-5 ${report.iconColor}`} />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900">{report.title}</h4>
-                    <p className="text-sm text-gray-500">{report.description}</p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">
-                    Last generated: {report.lastGenerated}
-                  </span>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    className="text-xs"
-                    onClick={() => handleDownload(report.title, report.type)}
-                  >
-                    <Download className="w-3 h-3 mr-1" />
-                    Download {report.type.toUpperCase()}
-                  </Button>
-                </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {reports.map((r, i) => (
+          <div key={i} className="bg-white rounded-xl shadow border border-red-100 p-6 flex flex-col justify-between min-h-[240px]">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-red-100 to-red-200">
+                {r.icon}
               </div>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">{r.title}</h3>
+                <p className="text-sm text-gray-500">{r.desc}</p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2 mt-auto">
+              <div className="text-xs text-gray-500">Last generated: <span className="font-semibold text-gray-700">{r.last}</span></div>
+              <Button variant="outline" className="w-full border-red-200 text-red-600 hover:bg-red-50 flex items-center gap-2">
+                <Download className="w-4 h-4" />
+                Download {r.download}
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
