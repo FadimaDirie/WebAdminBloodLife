@@ -102,10 +102,7 @@ export default function LoginPage() {
             {loading ? "Logging in..." : "Login"}
           </Button>
         </form>
-        <div className="text-center mt-4">
-          <span>Don't have an account? </span>
-          <button className="text-primary underline" onClick={() => setShowRegister(true)} type="button">Register</button>
-        </div>
+        
       </div>
       
     </div>
