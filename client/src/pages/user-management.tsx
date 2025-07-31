@@ -17,6 +17,9 @@ type User = {
   age: number;
   profilePic?: string;
   isSuspended?: boolean; // Added for suspension status
+  isAdmin?: boolean; // Added for admin status
+  isDonor?: boolean; // Added for donor status
+  isRequester?: boolean; // Added for requester status
 };
 
 export default function UserManagement() {
@@ -99,6 +102,9 @@ export default function UserManagement() {
           phone: data.user?.phone,
           age: data.user?.age,
           profilePic: data.user?.profilePic,
+          isAdmin: data.user?.isAdmin, // add
+          isDonor: data.user?.isDonor, // add
+          isRequester: data.user?.isRequester, // add
         },
       ]);
       setOpen(false);
@@ -183,13 +189,14 @@ export default function UserManagement() {
                   <th className="px-6 py-4 text-left text-base font-bold text-red-700 uppercase tracking-wider">Blood Type</th>
                   <th className="px-6 py-4 text-left text-base font-bold text-red-700 uppercase tracking-wider">Phone</th>
                   <th className="px-6 py-4 text-left text-base font-bold text-red-700 uppercase tracking-wider">Age</th>
+                  <th className="px-6 py-4 text-left text-base font-bold text-red-700 uppercase tracking-wider">Role</th> {/* Role column */}
                   <th className="px-6 py-4 text-left text-base font-bold text-red-700 uppercase tracking-wider rounded-tr-2xl">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-red-300">
                 {paginatedUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-8 text-gray-400">No users found.</td>
+                    <td colSpan={7} className="text-center py-8 text-gray-400">No users found.</td> {/* colSpan updated */}
                   </tr>
                 ) : (
                   paginatedUsers.map((user) => (
@@ -206,6 +213,9 @@ export default function UserManagement() {
                       <td className="px-6 py-4 whitespace-nowrap">{user.bloodType}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{user.phone}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{user.age}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{/* Role cell */}
+                        {user.isAdmin ? "Admin" : user.isDonor ? "Donor" : user.isRequester ? "Requester" : "User"}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {user.isSuspended ? (
                           <Button
