@@ -33,6 +33,8 @@ export default function UserManagement() {
     bloodType: "",
     phone: "",
     age: "",
+    role: "", // add role field
+    gender: "", // add gender field
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -73,7 +75,7 @@ export default function UserManagement() {
   const paginatedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   // Handle form changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -108,7 +110,7 @@ export default function UserManagement() {
         },
       ]);
       setOpen(false);
-      setForm({ fullName: "", email: "", password: "", city: "", bloodType: "", phone: "", age: "" });
+      setForm({ fullName: "", email: "", password: "", city: "", bloodType: "", phone: "", age: "", role: "", gender: "" });
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -284,11 +286,25 @@ export default function UserManagement() {
                   ))}
                 </select>
 
+                {/* Role Dropdown */}
+                <select
+                  className="w-full border rounded px-3 py-2"
+                  name="role"
+                  value={form.role}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select Role</option>
+                  <option value="admin">Admin</option>
+                  <option value="donor">Donor</option>
+                  <option value="requester">Requester</option>
+                </select>
+
                 {/* Gender Dropdown */}
                 <select
                   className="w-full border rounded px-3 py-2"
                   name="gender"
-                  value={form.gender || ""}
+                  value={form.gender}
                   onChange={handleChange}
                   required
                 >
