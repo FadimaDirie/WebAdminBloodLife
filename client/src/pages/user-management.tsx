@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useLocation } from "wouter";
 import Sidebar from "@/components/layout/sidebar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -26,6 +27,7 @@ export default function UserManagement() {
   const [open, setOpen] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [, setLocation] = useLocation();
   
   // Check if current user is admin
   const isAdmin = currentUser?.isAdmin || false;
@@ -309,8 +311,12 @@ export default function UserManagement() {
       // Update the user in state
       setUsers(prev => prev.map(u => u._id === userId ? { ...u, ...data.user } : u));
       setEditingUser(null);
-      setSuccess("User updated successfully!");
-      setTimeout(() => setSuccess(""), 3000);
+      setSuccess("User updated successfully! Redirecting...");
+      
+      // Navigate to next page after successful update
+      setTimeout(() => {
+        setLocation("/dashboard");
+      }, 2000);
     } catch (err: any) {
       setError(err.message || "Failed to update user");
       setTimeout(() => setError(""), 3000);
@@ -428,6 +434,7 @@ export default function UserManagement() {
                   <th className="px-6 py-4 text-left text-base font-bold text-red-700 uppercase tracking-wider">Blood Type</th>
                   <th className="px-6 py-4 text-left text-base font-bold text-red-700 uppercase tracking-wider">Phone</th>
                   <th className="px-6 py-4 text-left text-base font-bold text-red-700 uppercase tracking-wider">Age</th>
+                  <th className="px-6 py-4 text-left text-base font-bold text-red-700 uppercase tracking-wider">Weight</th>
                   <th className="px-6 py-4 text-left text-base font-bold text-red-700 uppercase tracking-wider">Role</th> {/* Role column */}
                   <th className="px-6 py-4 text-left text-base font-bold text-red-700 uppercase tracking-wider rounded-tr-2xl">Actions</th>
                 </tr>
@@ -435,7 +442,7 @@ export default function UserManagement() {
               <tbody className="bg-white divide-y divide-red-300">
                 {paginatedUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="text-center py-8 text-gray-400">
+                    <td colSpan={8} className="text-center py-8 text-gray-400">
                       {debouncedSearch ? (
                         <div className="flex flex-col items-center gap-2">
                           <div className="text-lg font-medium">No users found</div>
@@ -461,16 +468,30 @@ export default function UserManagement() {
                           alt={user.fullName}
                           className="w-9 h-9 rounded-full object-cover border"
                         />
-                        {editingUser === user._id ? (
-                          <input
-                            type="text"
-                            value={editForm.fullName}
-                            onChange={(e) => setEditForm({...editForm, fullName: e.target.value})}
-                            className="border rounded px-2 py-1 text-sm w-full"
-                          />
-                        ) : (
-                          user.fullName
-                        )}
+                        <div className="flex flex-col gap-1">
+                          {editingUser === user._id ? (
+                            <input
+                              type="text"
+                              value={editForm.fullName}
+                              onChange={(e) => setEditForm({...editForm, fullName: e.target.value})}
+                              className="border rounded px-2 py-1 text-sm w-full"
+                              placeholder="Full Name"
+                            />
+                          ) : (
+                            <div className="font-medium">{user.fullName}</div>
+                          )}
+                          {editingUser === user._id ? (
+                            <input
+                              type="email"
+                              value={editForm.email}
+                              onChange={(e) => setEditForm({...editForm, email: e.target.value})}
+                              className="border rounded px-2 py-1 text-sm w-full text-gray-600"
+                              placeholder="Email"
+                            />
+                          ) : (
+                            <div className="text-sm text-gray-500">{user.email}</div>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {editingUser === user._id ? (
@@ -529,6 +550,19 @@ export default function UserManagement() {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
+                        {editingUser === user._id ? (
+                          <input
+                            type="number"
+                            value={editForm.weight}
+                            onChange={(e) => setEditForm({...editForm, weight: e.target.value})}
+                            className="border rounded px-2 py-1 text-sm w-full"
+                            placeholder="Weight (kg)"
+                          />
+                        ) : (
+                          (user as any).weight || "N/A"
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <select
                           className={`border rounded px-2 py-1 text-sm transition-colors ${isAdmin ? 'bg-white hover:bg-gray-50' : 'bg-gray-100 cursor-not-allowed'}`}
                           value={user.isAdmin ? "admin" : user.isDonor ? "donor" : user.isRequester ? "requester" : "user"}
@@ -547,7 +581,7 @@ export default function UserManagement() {
                             <>
                               <Button
                                 size="sm"
-                                className="bg-green-100 text-green-600 px-2 py-1 rounded-full border border-green-200 hover:bg-green-200 transition font-semibold flex items-center justify-center"
+                                className="bg-green-50 text-green-500 px-2 py-1 rounded-full border border-green-100 hover:bg-green-100 transition font-semibold flex items-center justify-center"
                                 onClick={() => handleUpdateUser(user._id)}
                               >
                                 <Save className="w-4 h-4" />
