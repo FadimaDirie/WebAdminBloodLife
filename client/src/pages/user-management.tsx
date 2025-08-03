@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import Header from "@/components/layout/header";
-import { Ban, Eye, EyeOff } from "lucide-react";
+import { Ban, Eye, EyeOff, Edit, Save, X, Search } from "lucide-react";
 
 type User = {
   _id: string;
@@ -25,6 +25,10 @@ type User = {
 export default function UserManagement() {
   const [open, setOpen] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  
+  // Check if current user is admin
+  const isAdmin = currentUser?.isAdmin || false;
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -40,13 +44,43 @@ export default function UserManagement() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(""); // Add success message state
   const [search, setSearch] = useState("");
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [loadingCity, setLoadingCity] = useState(true);
   const [cityData, setCityData] = useState<any[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    age: "",
+    bloodType: "",
+    city: "",
+    weight: "",
+    gender: ""
+  });
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  // Get current user from localStorage
+  useEffect(() => {
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      setCurrentUser(JSON.parse(userData));
+    }
+  }, []);
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [search]);
 
   // Fetch all users from API
   useEffect(() => {
@@ -65,12 +99,29 @@ export default function UserManagement() {
 
   // Filter users by search
   const filteredUsers = useMemo(() => {
-    return users.filter(
-      (u) =>
-        u.fullName.toLowerCase().includes(search.toLowerCase()) ||
-        u.email.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [users, search]);
+    const searchLower = debouncedSearch.toLowerCase().trim();
+    
+    // If no search term, return all users
+    if (searchLower === "") {
+      return users;
+    }
+    
+    return users.filter((u) => {
+      // Check if any field contains the search term
+      const searchableFields = [
+        u.fullName || "",
+        u.email || "",
+        u.city || "",
+        u.bloodType || "",
+        u.phone || "",
+        u.age?.toString() || ""
+      ];
+      
+      return searchableFields.some(field => 
+        field.toLowerCase().includes(searchLower)
+      );
+    });
+  }, [users, debouncedSearch]);
 
   // Filtered and paginated users
   const paginatedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -130,6 +181,12 @@ export default function UserManagement() {
 
   // Handle update user role
   const handleUpdateRole = async (userId: string, newRole: string) => {
+    if (!isAdmin) {
+      setError("Only admins can update user roles");
+      setTimeout(() => setError(""), 3000);
+      return;
+    }
+
     try {
       const res = await fetch(`https://bloods-service-api.onrender.com/api/admin/update-role/${userId}`, {
         method: "PATCH",
@@ -163,6 +220,12 @@ export default function UserManagement() {
 
   // Handle suspend user
   const handleSuspend = async (userId: string) => {
+    if (!isAdmin) {
+      setError("Only admins can suspend users");
+      setTimeout(() => setError(""), 3000);
+      return;
+    }
+
     try {
       const res = await fetch(`https://bloods-service-api.onrender.com/api/admin/suspend/${userId}`, {
         method: "PATCH",
@@ -172,13 +235,22 @@ export default function UserManagement() {
       if (!res.ok) throw new Error(data.msg || "Failed to suspend user");
       // Update the user in state with the returned user object
       setUsers(prev => prev.map(u => u._id === userId ? { ...u, ...data.user } : u));
+      setSuccess("User suspended successfully!");
+      setTimeout(() => setSuccess(""), 3000);
     } catch (err: any) {
-      alert(err.message || "Failed to suspend user");
+      setError(err.message || "Failed to suspend user");
+      setTimeout(() => setError(""), 3000);
     }
   };
 
   // Handle unsuspend user
   const handleUnsuspend = async (userId: string) => {
+    if (!isAdmin) {
+      setError("Only admins can unsuspend users");
+      setTimeout(() => setError(""), 3000);
+      return;
+    }
+
     try {
       const res = await fetch(`https://bloods-service-api.onrender.com/api/admin/unsuspend/${userId}`, {
         method: "PATCH",
@@ -188,9 +260,76 @@ export default function UserManagement() {
       if (!res.ok) throw new Error(data.msg || "Failed to unsuspend user");
       // Update the user in state with the returned user object
       setUsers(prev => prev.map(u => u._id === userId ? { ...u, ...data.user } : u));
+      setSuccess("User unsuspended successfully!");
+      setTimeout(() => setSuccess(""), 3000);
     } catch (err: any) {
-      alert(err.message || "Failed to unsuspend user");
+      setError(err.message || "Failed to unsuspend user");
+      setTimeout(() => setError(""), 3000);
     }
+  };
+
+  // Handle edit user
+  const handleEditUser = (user: User) => {
+    setEditingUser(user._id);
+    setEditForm({
+      fullName: user.fullName || "",
+      email: user.email || "",
+      phone: user.phone || "",
+      age: user.age?.toString() || "",
+      bloodType: user.bloodType || "",
+      city: user.city || "",
+      weight: (user as any).weight?.toString() || "",
+      gender: (user as any).gender || ""
+    });
+  };
+
+  // Handle update user
+  const handleUpdateUser = async (userId: string) => {
+    if (!isAdmin) {
+      setError("Only admins can update users");
+      setTimeout(() => setError(""), 3000);
+      return;
+    }
+
+    try {
+      const updateData = {
+        ...editForm,
+        age: Number(editForm.age),
+        weight: Number(editForm.weight)
+      };
+
+      const res = await fetch(`https://bloods-service-api.onrender.com/api/user/${userId}/update`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updateData),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.msg || "Failed to update user");
+      
+      // Update the user in state
+      setUsers(prev => prev.map(u => u._id === userId ? { ...u, ...data.user } : u));
+      setEditingUser(null);
+      setSuccess("User updated successfully!");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err: any) {
+      setError(err.message || "Failed to update user");
+      setTimeout(() => setError(""), 3000);
+    }
+  };
+
+  // Handle cancel edit
+  const handleCancelEdit = () => {
+    setEditingUser(null);
+    setEditForm({
+      fullName: "",
+      email: "",
+      phone: "",
+      age: "",
+      bloodType: "",
+      city: "",
+      weight: "",
+      gender: ""
+    });
   };
 
   // Helper for profile image
@@ -214,7 +353,9 @@ export default function UserManagement() {
         <div className="flex-1 overflow-y-auto p-8 w-full max-w-5xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-3xl font-bold">User Management</h1>
-            <Button onClick={() => setOpen(true)} className="bg-primary text-white">Add User</Button>
+            {isAdmin && (
+              <Button onClick={() => setOpen(true)} className="bg-primary text-white">Add User</Button>
+            )}
           </div>
           
           {/* Success/Error Messages */}
@@ -228,14 +369,55 @@ export default function UserManagement() {
               {error}
             </div>
           )}
-          <div className="flex items-center mb-4">
-            <input
-              type="text"
-              placeholder="Search users..."
-              className="border rounded px-3 py-2 w-full max-w-xs shadow-sm"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
+          {!isAdmin && (
+            <div className="mb-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg">
+              You are viewing in read-only mode. Only admins can perform actions.
+            </div>
+          )}
+          <div className="flex items-center mb-4 gap-4">
+            <div className="relative w-full max-w-md">
+              <Search className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
+              <input
+                type="text"
+                placeholder="Search by name, email, city, blood type, phone..."
+                className="pl-10 pr-10 py-2 w-full border rounded-lg shadow-sm border-red-200 focus:border-red-500 focus:ring-red-500 focus:ring-2 transition-all duration-200"
+                value={search}
+                onChange={e => {
+                  setSearch(e.target.value);
+                  setCurrentPage(1); // Reset to first page when searching
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    setSearch("");
+                    setCurrentPage(1);
+                  }
+                }}
+              />
+              {search && (
+                <button
+                  onClick={() => {
+                    setSearch("");
+                    setCurrentPage(1);
+                  }}
+                  className="absolute right-3 top-2.5 text-gray-400 hover:text-red-500 transition-colors"
+                  title="Clear search"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            {debouncedSearch && (
+              <div className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                {searchLoading ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                    Searching...
+                  </span>
+                ) : (
+                  `${filteredUsers.length} result${filteredUsers.length !== 1 ? 's' : ''} found`
+                )}
+              </div>
+            )}
           </div>
           <div className="overflow-x-auto rounded-2xl shadow-lg bg-white">
             <table className="w-full min-w-[900px] divide-y divide-red-200 text-base">
@@ -253,7 +435,22 @@ export default function UserManagement() {
               <tbody className="bg-white divide-y divide-red-300">
                 {paginatedUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="text-center py-8 text-gray-400">No users found.</td> {/* colSpan updated */}
+                    <td colSpan={7} className="text-center py-8 text-gray-400">
+                      {debouncedSearch ? (
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="text-lg font-medium">No users found</div>
+                          <div className="text-sm">Try searching with different keywords</div>
+                          <button
+                            onClick={() => setSearch("")}
+                            className="text-red-600 hover:text-red-700 underline"
+                          >
+                            Clear search
+                          </button>
+                        </div>
+                      ) : (
+                        "No users found."
+                      )}
+                    </td>
                   </tr>
                 ) : (
                   paginatedUsers.map((user) => (
@@ -264,17 +461,79 @@ export default function UserManagement() {
                           alt={user.fullName}
                           className="w-9 h-9 rounded-full object-cover border"
                         />
-                        {user.fullName}
+                        {editingUser === user._id ? (
+                          <input
+                            type="text"
+                            value={editForm.fullName}
+                            onChange={(e) => setEditForm({...editForm, fullName: e.target.value})}
+                            className="border rounded px-2 py-1 text-sm w-full"
+                          />
+                        ) : (
+                          user.fullName
+                        )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">{user.city}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{user.bloodType}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{user.phone}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{user.age}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {editingUser === user._id ? (
+                          <input
+                            type="text"
+                            value={editForm.city}
+                            onChange={(e) => setEditForm({...editForm, city: e.target.value})}
+                            className="border rounded px-2 py-1 text-sm w-full"
+                          />
+                        ) : (
+                          user.city
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {editingUser === user._id ? (
+                          <select
+                            value={editForm.bloodType}
+                            onChange={(e) => setEditForm({...editForm, bloodType: e.target.value})}
+                            className="border rounded px-2 py-1 text-sm w-full"
+                          >
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                          </select>
+                        ) : (
+                          user.bloodType
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {editingUser === user._id ? (
+                          <input
+                            type="text"
+                            value={editForm.phone}
+                            onChange={(e) => setEditForm({...editForm, phone: e.target.value})}
+                            className="border rounded px-2 py-1 text-sm w-full"
+                          />
+                        ) : (
+                          user.phone
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {editingUser === user._id ? (
+                          <input
+                            type="number"
+                            value={editForm.age}
+                            onChange={(e) => setEditForm({...editForm, age: e.target.value})}
+                            className="border rounded px-2 py-1 text-sm w-full"
+                          />
+                        ) : (
+                          user.age
+                        )}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <select
-                          className="border rounded px-2 py-1 text-sm bg-white hover:bg-gray-50 transition-colors"
+                          className={`border rounded px-2 py-1 text-sm transition-colors ${isAdmin ? 'bg-white hover:bg-gray-50' : 'bg-gray-100 cursor-not-allowed'}`}
                           value={user.isAdmin ? "admin" : user.isDonor ? "donor" : user.isRequester ? "requester" : "user"}
                           onChange={(e) => handleUpdateRole(user._id, e.target.value)}
+                          disabled={!isAdmin}
                         >
                           <option value="admin" className="text-purple-600 font-medium">Admin</option>
                           <option value="donor" className="text-red-600 font-medium">Donor</option>
@@ -283,23 +542,55 @@ export default function UserManagement() {
                         </select>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {user.isSuspended ? (
-                          <Button
-                            size="sm"
-                            className="bg-blue-100 text-blue-600 px-4 py-1 rounded-full border border-gray-300 hover:bg-gray-300 transition font-semibold flex items-center justify-center"
-                            onClick={() => handleUnsuspend(user._id)}
-                          >
-                            <EyeOff className="w-4 h-4" />
-                          </Button>
-                        ) : (
-                          <Button
-                            size="sm"
-                            className="bg-blue-100 text-blue-600 px-4 py-1 rounded-full border border-blue-200 hover:bg-blue-200 transition font-semibold flex items-center justify-center"
-                            onClick={() => handleSuspend(user._id)}
-                          >
-                            <Eye className="w-4 h-4 text-blue-600" />
-                          </Button>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {editingUser === user._id ? (
+                            <>
+                              <Button
+                                size="sm"
+                                className="bg-green-100 text-green-600 px-2 py-1 rounded-full border border-green-200 hover:bg-green-200 transition font-semibold flex items-center justify-center"
+                                onClick={() => handleUpdateUser(user._id)}
+                              >
+                                <Save className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full border border-gray-200 hover:bg-gray-200 transition font-semibold flex items-center justify-center"
+                                onClick={handleCancelEdit}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </>
+                          ) : (
+                            isAdmin && (
+                              <Button
+                                size="sm"
+                                className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full border border-blue-200 hover:bg-blue-200 transition font-semibold flex items-center justify-center"
+                                onClick={() => handleEditUser(user)}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            )
+                          )}
+                          {isAdmin && (
+                            user.isSuspended ? (
+                              <Button
+                                size="sm"
+                                className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full border border-gray-300 hover:bg-gray-300 transition font-semibold flex items-center justify-center"
+                                onClick={() => handleUnsuspend(user._id)}
+                              >
+                                <EyeOff className="w-4 h-4" />
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full border border-blue-200 hover:bg-blue-200 transition font-semibold flex items-center justify-center"
+                                onClick={() => handleSuspend(user._id)}
+                              >
+                                <Eye className="w-4 h-4 text-blue-600" />
+                              </Button>
+                            )
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))
