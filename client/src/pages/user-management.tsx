@@ -301,6 +301,11 @@ export default function UserManagement() {
 
   // Handle update user
   const handleUpdateUser = async (userId: string) => {
+    console.log("=== UPDATE USER START ===");
+    console.log("User ID:", userId);
+    console.log("Is Admin:", isAdmin);
+    console.log("Current Edit Form:", editForm);
+    
     if (!isAdmin) {
       setError("Only admins can update users");
       setTimeout(() => setError(""), 3000);
@@ -339,30 +344,38 @@ export default function UserManagement() {
     }
 
     try {
-      const updateData = {
+      // Test with minimal data first
+      const testData = {
         fullName: editForm.fullName,
         email: editForm.email,
         phone: editForm.phone,
-        age: age,
-        bloodType: editForm.bloodType,
-        city: editForm.city,
-        weight: weight || undefined,
-        gender: editForm.gender || undefined,
-        role: editForm.role
+        age: age
       };
 
-      console.log("Updating user with data:", updateData);
+      console.log("Testing with minimal data:", testData);
+      console.log("API URL:", `https://bloods-service-api.onrender.com/api/user/${userId}/update`);
 
       const res = await fetch(`https://bloods-service-api.onrender.com/api/user/${userId}/update`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updateData),
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify(testData),
       });
       
-      const data = await res.json();
-      console.log("Update response:", data);
+      console.log("Response status:", res.status);
+      console.log("Response headers:", res.headers);
       
-      if (!res.ok) throw new Error(data.msg || "Failed to update user");
+      const data = await res.json();
+      console.log("Update response data:", data);
+      
+      if (!res.ok) {
+        console.error("API Error:", data);
+        throw new Error(data.msg || data.message || "Failed to update user");
+      }
+      
+      console.log("Update successful!");
       
       // Update the user in state
       setUsers(prev => prev.map(u => u._id === userId ? { ...u, ...data.user } : u));
@@ -665,8 +678,14 @@ export default function UserManagement() {
                                 size="sm"
                                 className="bg-green-50 text-green-500 px-2 py-1 rounded-full border border-green-100 hover:bg-green-100 transition font-semibold flex items-center justify-center"
                                 onClick={() => {
+                                  console.log("=== UPDATE BUTTON CLICKED ===");
                                   console.log("Update button clicked for user:", user._id);
                                   console.log("Current edit form:", editForm);
+                                  console.log("Editing user ID:", editingUser);
+                                  
+                                  // Add immediate visual feedback
+                                  setSuccess("Update button clicked! Processing...");
+                                  
                                   handleUpdateUser(user._id);
                                 }}
                               >
