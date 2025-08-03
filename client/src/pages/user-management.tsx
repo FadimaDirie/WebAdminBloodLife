@@ -273,15 +273,27 @@ export default function UserManagement() {
 
   // Handle edit user
   const handleEditUser = (user: User) => {
+    console.log("Editing user:", user);
     setEditingUser(user._id);
     setEditForm({
       fullName: user.fullName || "",
       email: user.email || "",
       phone: user.phone || "",
-      age: user.age?.toString() || "",
+      age: user.age ? user.age.toString() : "",
       bloodType: user.bloodType || "",
       city: user.city || "",
-      weight: (user as any).weight?.toString() || "",
+      weight: (user as any).weight ? (user as any).weight.toString() : "",
+      gender: (user as any).gender || "",
+      role: user.isAdmin ? "admin" : user.isDonor ? "donor" : user.isRequester ? "requester" : "user"
+    });
+    console.log("Edit form initialized:", {
+      fullName: user.fullName || "",
+      email: user.email || "",
+      phone: user.phone || "",
+      age: user.age ? user.age.toString() : "",
+      bloodType: user.bloodType || "",
+      city: user.city || "",
+      weight: (user as any).weight ? (user as any).weight.toString() : "",
       gender: (user as any).gender || "",
       role: user.isAdmin ? "admin" : user.isDonor ? "donor" : user.isRequester ? "requester" : "user"
     });
@@ -297,6 +309,14 @@ export default function UserManagement() {
 
     // Validate required fields
     if (!editForm.fullName || !editForm.email || !editForm.phone || !editForm.age || !editForm.bloodType || !editForm.city) {
+      console.log("Validation failed - missing fields:", {
+        fullName: !!editForm.fullName,
+        email: !!editForm.email,
+        phone: !!editForm.phone,
+        age: !!editForm.age,
+        bloodType: !!editForm.bloodType,
+        city: !!editForm.city
+      });
       setError("Please fill in all required fields");
       setTimeout(() => setError(""), 3000);
       return;
@@ -347,12 +367,12 @@ export default function UserManagement() {
       // Update the user in state
       setUsers(prev => prev.map(u => u._id === userId ? { ...u, ...data.user } : u));
       setEditingUser(null);
-      setSuccess("User updated successfully! Redirecting...");
+      setSuccess("User updated successfully!");
       
-      // Navigate to next page after successful update
+      // Clear success message after 3 seconds
       setTimeout(() => {
-        setLocation("/dashboard");
-      }, 2000);
+        setSuccess("");
+      }, 3000);
     } catch (err: any) {
       console.error("Update error:", err);
       setError(err.message || "Failed to update user");
@@ -583,17 +603,8 @@ export default function UserManagement() {
                             max="120"
                             value={editForm.age}
                             onChange={(e) => {
-                              const value = e.target.value;
-                              // Only allow numbers
-                              if (value === '' || /^\d+$/.test(value)) {
-                                setEditForm({...editForm, age: value});
-                              }
-                            }}
-                            onKeyPress={(e) => {
-                              // Prevent non-numeric characters
-                              if (!/[0-9]/.test(e.key)) {
-                                e.preventDefault();
-                              }
+                              console.log("Age input changed:", e.target.value);
+                              setEditForm({...editForm, age: e.target.value});
                             }}
                             className="border rounded px-2 py-1 text-sm w-full"
                             placeholder="Age"
@@ -610,17 +621,8 @@ export default function UserManagement() {
                             max="300"
                             value={editForm.weight}
                             onChange={(e) => {
-                              const value = e.target.value;
-                              // Only allow numbers
-                              if (value === '' || /^\d+$/.test(value)) {
-                                setEditForm({...editForm, weight: value});
-                              }
-                            }}
-                            onKeyPress={(e) => {
-                              // Prevent non-numeric characters
-                              if (!/[0-9]/.test(e.key)) {
-                                e.preventDefault();
-                              }
+                              console.log("Weight input changed:", e.target.value);
+                              setEditForm({...editForm, weight: e.target.value});
                             }}
                             className="border rounded px-2 py-1 text-sm w-full"
                             placeholder="Weight (kg)"
@@ -662,7 +664,11 @@ export default function UserManagement() {
                               <Button
                                 size="sm"
                                 className="bg-green-50 text-green-500 px-2 py-1 rounded-full border border-green-100 hover:bg-green-100 transition font-semibold flex items-center justify-center"
-                                onClick={() => handleUpdateUser(user._id)}
+                                onClick={() => {
+                                  console.log("Update button clicked for user:", user._id);
+                                  console.log("Current edit form:", editForm);
+                                  handleUpdateUser(user._id);
+                                }}
                               >
                                 <Save className="w-4 h-4" />
                               </Button>
