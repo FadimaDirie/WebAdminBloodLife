@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { useLocation as useWouterLocation } from "wouter";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
@@ -61,7 +61,15 @@ export default function DonorsList() {
   }, []);
 
   const filteredDonors = donors.filter(donor => {
-    const matchesSearch = donor.fullName.toLowerCase().includes(searchTerm.toLowerCase()) || donor.city.toLowerCase().includes(searchTerm.toLowerCase());
+    // Enhanced search - search across multiple fields
+    const searchLower = searchTerm.toLowerCase().trim();
+    const matchesSearch = searchTerm === "" || 
+      donor.fullName?.toLowerCase().includes(searchLower) || 
+      donor.city?.toLowerCase().includes(searchLower) ||
+      donor.bloodType?.toLowerCase().includes(searchLower) ||
+      donor.phone?.includes(searchTerm) ||
+      donor.age?.toString().includes(searchTerm);
+    
     const matchesBloodType = selectedBloodType === "all" || donor.bloodType === selectedBloodType;
     const matchesCity = selectedCity === "all" || donor.city === selectedCity;
     return matchesSearch && matchesBloodType && matchesCity;
@@ -106,12 +114,25 @@ export default function DonorsList() {
               <Search className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
               <Input
                 type="text"
-                placeholder="Search donors..."
-                className="pl-10 pr-4 py-2 w-full"
+                placeholder="Search by name, city, blood type, phone..."
+                className="pl-10 pr-4 py-2 w-full border-red-200 focus:border-red-500 focus:ring-red-500"
                 value={searchTerm}
                 onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
               />
+              {searchTerm && (
+                <button
+                  onClick={() => { setSearchTerm(""); setCurrentPage(1); }}
+                  className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
+            {searchTerm && (
+              <div className="text-sm text-gray-600">
+                {filteredDonors.length} result{filteredDonors.length !== 1 ? 's' : ''} found
+              </div>
+            )}
             <select
               value={selectedCity}
               onChange={e => { setSelectedCity(e.target.value); setCurrentPage(1); }}
@@ -160,7 +181,14 @@ export default function DonorsList() {
                     {loading ? (
                       <tr><td colSpan={7} className="text-center py-8 text-gray-400">Loading...</td></tr>
                     ) : paginatedDonors.length === 0 ? (
-                      <tr><td colSpan={7} className="text-center py-8 text-gray-400">No donors found.</td></tr>
+                      <tr>
+                        <td colSpan={7} className="text-center py-8 text-gray-400">
+                          {searchTerm || selectedBloodType !== "all" || selectedCity !== "all" 
+                            ? `No donors found matching your search criteria.${searchTerm ? ` Try searching for "${searchTerm}"` : ""}`
+                            : "No donors found."
+                          }
+                        </td>
+                      </tr>
                     ) : (
                       paginatedDonors.map((donor) => {
                         // Badge color logic

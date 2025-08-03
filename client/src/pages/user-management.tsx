@@ -38,6 +38,7 @@ export default function UserManagement() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(""); // Add success message state
   const [search, setSearch] = useState("");
   const [loadingCity, setLoadingCity] = useState(true);
   const [cityData, setCityData] = useState<any[]>([]);
@@ -84,11 +85,19 @@ export default function UserManagement() {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setSuccess(""); // Clear previous success message
     try {
+      // Set default role to requester if not selected
+      const userData = {
+        ...form,
+        age: Number(form.age),
+        role: form.role || "requester" // Default to requester if not selected
+      };
+      
       const res = await fetch("https://bloods-service-api.onrender.com/api/user/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, age: Number(form.age) }),
+        body: JSON.stringify(userData),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.msg || "Registration failed");
@@ -104,17 +113,51 @@ export default function UserManagement() {
           phone: data.user?.phone,
           age: data.user?.age,
           profilePic: data.user?.profilePic,
-          isAdmin: data.user?.isAdmin, // add
-          isDonor: data.user?.isDonor, // add
-          isRequester: data.user?.isRequester, // add
+          isAdmin: data.user?.isAdmin,
+          isDonor: data.user?.isDonor,
+          isRequester: data.user?.isRequester,
         },
       ]);
       setOpen(false);
       setForm({ fullName: "", email: "", password: "", city: "", bloodType: "", phone: "", age: "", role: "", gender: "" });
+      setSuccess("User added successfully!");
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle update user role
+  const handleUpdateRole = async (userId: string, newRole: string) => {
+    try {
+      const res = await fetch(`https://bloods-service-api.onrender.com/api/admin/update-role/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: newRole }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.msg || "Failed to update role");
+      
+      // Update the user in state
+      setUsers(prev => prev.map(u => {
+        if (u._id === userId) {
+          return {
+            ...u,
+            isAdmin: newRole === "admin",
+            isDonor: newRole === "donor", 
+            isRequester: newRole === "requester"
+          };
+        }
+        return u;
+      }));
+      
+      // Show success message
+      setSuccess(`User role updated to ${newRole} successfully!`);
+      setTimeout(() => setSuccess(""), 3000); // Clear after 3 seconds
+    } catch (err: any) {
+      setError(err.message || "Failed to update role");
+      setTimeout(() => setError(""), 3000); // Clear after 3 seconds
     }
   };
 
@@ -173,6 +216,18 @@ export default function UserManagement() {
             <h1 className="text-3xl font-bold">User Management</h1>
             <Button onClick={() => setOpen(true)} className="bg-primary text-white">Add User</Button>
           </div>
+          
+          {/* Success/Error Messages */}
+          {success && (
+            <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+              {success}
+            </div>
+          )}
+          {error && (
+            <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+              {error}
+            </div>
+          )}
           <div className="flex items-center mb-4">
             <input
               type="text"
@@ -215,8 +270,17 @@ export default function UserManagement() {
                       <td className="px-6 py-4 whitespace-nowrap">{user.bloodType}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{user.phone}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{user.age}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{/* Role cell */}
-                        {user.isAdmin ? "Admin" : user.isDonor ? "Donor" : user.isRequester ? "Requester" : "User"}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <select
+                          className="border rounded px-2 py-1 text-sm bg-white hover:bg-gray-50 transition-colors"
+                          value={user.isAdmin ? "admin" : user.isDonor ? "donor" : user.isRequester ? "requester" : "user"}
+                          onChange={(e) => handleUpdateRole(user._id, e.target.value)}
+                        >
+                          <option value="admin" className="text-purple-600 font-medium">Admin</option>
+                          <option value="donor" className="text-red-600 font-medium">Donor</option>
+                          <option value="requester" className="text-blue-600 font-medium">Requester</option>
+                          <option value="user" className="text-gray-600">User</option>
+                        </select>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {user.isSuspended ? (
@@ -255,6 +319,7 @@ export default function UserManagement() {
               <DialogTitle>Add User</DialogTitle>
               <form className="space-y-4 mt-4" onSubmit={handleSubmit}>
                 <input className="w-full border rounded px-3 py-2" name="fullName" placeholder="Full Name" value={form.fullName} onChange={handleChange} required />
+                <input className="w-full border rounded px-3 py-2" name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange} required />
                 <input className="w-full border rounded px-3 py-2" name="phone" placeholder="Phone" value={form.phone} onChange={handleChange} required />
                 <input className="w-full border rounded px-3 py-2" name="password" type="password" placeholder="Password" value={form.password} onChange={handleChange} required />
 
@@ -315,7 +380,7 @@ export default function UserManagement() {
 
                 <input className="w-full border rounded px-3 py-2" name="age" type="number" placeholder="Age" value={form.age} onChange={handleChange} required />
                 {error && <div className="text-red-500 text-sm">{error}</div>}
-                {/* {success && <div className="text-green-600 text-sm">{success}</div>} */}
+                {success && <div className="text-green-600 text-sm">{success}</div>}
                 <Button type="submit" className="w-full" disabled={loading}>{loading ? "Adding..." : "Add User"}</Button>
               </form>
             </DialogContent>
