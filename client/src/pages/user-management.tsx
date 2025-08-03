@@ -60,7 +60,8 @@ export default function UserManagement() {
     bloodType: "",
     city: "",
     weight: "",
-    gender: ""
+    gender: "",
+    role: ""
   });
 
   // Pagination state
@@ -281,7 +282,8 @@ export default function UserManagement() {
       bloodType: user.bloodType || "",
       city: user.city || "",
       weight: (user as any).weight?.toString() || "",
-      gender: (user as any).gender || ""
+      gender: (user as any).gender || "",
+      role: user.isAdmin ? "admin" : user.isDonor ? "donor" : user.isRequester ? "requester" : "user"
     });
   };
 
@@ -293,19 +295,53 @@ export default function UserManagement() {
       return;
     }
 
+    // Validate required fields
+    if (!editForm.fullName || !editForm.email || !editForm.phone || !editForm.age || !editForm.bloodType || !editForm.city) {
+      setError("Please fill in all required fields");
+      setTimeout(() => setError(""), 3000);
+      return;
+    }
+
+    // Validate age and weight
+    const age = Number(editForm.age);
+    const weight = Number(editForm.weight);
+    
+    if (isNaN(age) || age < 1 || age > 120) {
+      setError("Age must be between 1 and 120");
+      setTimeout(() => setError(""), 3000);
+      return;
+    }
+
+    if (editForm.weight && (isNaN(weight) || weight < 1 || weight > 300)) {
+      setError("Weight must be between 1 and 300 kg");
+      setTimeout(() => setError(""), 3000);
+      return;
+    }
+
     try {
       const updateData = {
-        ...editForm,
-        age: Number(editForm.age),
-        weight: Number(editForm.weight)
+        fullName: editForm.fullName,
+        email: editForm.email,
+        phone: editForm.phone,
+        age: age,
+        bloodType: editForm.bloodType,
+        city: editForm.city,
+        weight: weight || undefined,
+        gender: editForm.gender || undefined,
+        role: editForm.role
       };
+
+      console.log("Updating user with data:", updateData);
 
       const res = await fetch(`https://bloods-service-api.onrender.com/api/user/${userId}/update`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updateData),
       });
+      
       const data = await res.json();
+      console.log("Update response:", data);
+      
       if (!res.ok) throw new Error(data.msg || "Failed to update user");
       
       // Update the user in state
@@ -318,6 +354,7 @@ export default function UserManagement() {
         setLocation("/dashboard");
       }, 2000);
     } catch (err: any) {
+      console.error("Update error:", err);
       setError(err.message || "Failed to update user");
       setTimeout(() => setError(""), 3000);
     }
@@ -334,7 +371,8 @@ export default function UserManagement() {
       bloodType: "",
       city: "",
       weight: "",
-      gender: ""
+      gender: "",
+      role: ""
     });
   };
 
@@ -541,9 +579,24 @@ export default function UserManagement() {
                         {editingUser === user._id ? (
                           <input
                             type="number"
+                            min="1"
+                            max="120"
                             value={editForm.age}
-                            onChange={(e) => setEditForm({...editForm, age: e.target.value})}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              // Only allow numbers
+                              if (value === '' || /^\d+$/.test(value)) {
+                                setEditForm({...editForm, age: value});
+                              }
+                            }}
+                            onKeyPress={(e) => {
+                              // Prevent non-numeric characters
+                              if (!/[0-9]/.test(e.key)) {
+                                e.preventDefault();
+                              }
+                            }}
                             className="border rounded px-2 py-1 text-sm w-full"
+                            placeholder="Age"
                           />
                         ) : (
                           user.age
@@ -553,8 +606,22 @@ export default function UserManagement() {
                         {editingUser === user._id ? (
                           <input
                             type="number"
+                            min="1"
+                            max="300"
                             value={editForm.weight}
-                            onChange={(e) => setEditForm({...editForm, weight: e.target.value})}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              // Only allow numbers
+                              if (value === '' || /^\d+$/.test(value)) {
+                                setEditForm({...editForm, weight: value});
+                              }
+                            }}
+                            onKeyPress={(e) => {
+                              // Prevent non-numeric characters
+                              if (!/[0-9]/.test(e.key)) {
+                                e.preventDefault();
+                              }
+                            }}
                             className="border rounded px-2 py-1 text-sm w-full"
                             placeholder="Weight (kg)"
                           />
@@ -563,17 +630,30 @@ export default function UserManagement() {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <select
-                          className={`border rounded px-2 py-1 text-sm transition-colors ${isAdmin ? 'bg-white hover:bg-gray-50' : 'bg-gray-100 cursor-not-allowed'}`}
-                          value={user.isAdmin ? "admin" : user.isDonor ? "donor" : user.isRequester ? "requester" : "user"}
-                          onChange={(e) => handleUpdateRole(user._id, e.target.value)}
-                          disabled={!isAdmin}
-                        >
-                          <option value="admin" className="text-purple-600 font-medium">Admin</option>
-                          <option value="donor" className="text-red-600 font-medium">Donor</option>
-                          <option value="requester" className="text-blue-600 font-medium">Requester</option>
-                          <option value="user" className="text-gray-600">User</option>
-                        </select>
+                        {editingUser === user._id ? (
+                          <select
+                            className="border rounded px-2 py-1 text-sm w-full bg-white hover:bg-gray-50 transition-colors"
+                            value={editForm.role || (user.isAdmin ? "admin" : user.isDonor ? "donor" : user.isRequester ? "requester" : "user")}
+                            onChange={(e) => setEditForm({...editForm, role: e.target.value})}
+                          >
+                            <option value="admin" className="text-purple-600 font-medium">Admin</option>
+                            <option value="donor" className="text-red-600 font-medium">Donor</option>
+                            <option value="requester" className="text-blue-600 font-medium">Requester</option>
+                            <option value="user" className="text-gray-600">User</option>
+                          </select>
+                        ) : (
+                          <select
+                            className={`border rounded px-2 py-1 text-sm transition-colors ${isAdmin ? 'bg-white hover:bg-gray-50' : 'bg-gray-100 cursor-not-allowed'}`}
+                            value={user.isAdmin ? "admin" : user.isDonor ? "donor" : user.isRequester ? "requester" : "user"}
+                            onChange={(e) => handleUpdateRole(user._id, e.target.value)}
+                            disabled={!isAdmin}
+                          >
+                            <option value="admin" className="text-purple-600 font-medium">Admin</option>
+                            <option value="donor" className="text-red-600 font-medium">Donor</option>
+                            <option value="requester" className="text-blue-600 font-medium">Requester</option>
+                            <option value="user" className="text-gray-600">User</option>
+                          </select>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
