@@ -373,13 +373,33 @@ export default function UserManagement() {
       console.log("Updating user with data:", updateData);
       console.log("API URL:", `https://bloods-service-api.onrender.com/api/user/${userId}/update`);
 
+      // Convert data to FormData as the API expects form-data
+      const formData = new FormData();
+      formData.append('fullName', updateData.fullName);
+      formData.append('email', updateData.email);
+      formData.append('phone', updateData.phone);
+      formData.append('age', updateData.age.toString());
+      formData.append('bloodType', updateData.bloodType);
+      formData.append('city', updateData.city);
+      
+      if (updateData.weight) {
+        formData.append('weight', updateData.weight.toString());
+      }
+      if (updateData.gender) {
+        formData.append('gender', updateData.gender);
+      }
+      if (updateData.role) {
+        formData.append('role', updateData.role);
+      }
+
+      console.log("FormData entries:");
+      formData.forEach((value, key) => {
+        console.log(`${key}: ${value}`);
+      });
+
       const res = await fetch(`https://bloods-service-api.onrender.com/api/user/${userId}/update`, {
         method: "PUT",
-        headers: { 
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        body: JSON.stringify(updateData),
+        body: formData,
       });
       
       console.log("Response status:", res.status);
@@ -702,7 +722,6 @@ export default function UserManagement() {
                                   console.log("Update button clicked for user:", user._id);
                                   console.log("Current edit form:", editForm);
                                   console.log("Is admin:", isAdmin);
-                                  alert("Update button clicked! Check console for details.");
                                   handleUpdateUser(user._id);
                                 }}
                               >
