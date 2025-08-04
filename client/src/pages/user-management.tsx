@@ -21,6 +21,21 @@ type User = {
   isAdmin?: boolean; // Added for admin status
   isDonor?: boolean; // Added for donor status
   isRequester?: boolean; // Added for requester status
+  // Additional fields from API response
+  gender?: string;
+  weight?: number;
+  latitude?: number;
+  longitude?: number;
+  username?: string;
+  password?: string;
+  healthStatus?: string;
+  healthChecklist?: boolean;
+  availability?: string;
+  fcmToken?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  units?: number;
+  profilePicUrl?: string;
 };
 
 export default function UserManagement() {
@@ -427,15 +442,17 @@ export default function UserManagement() {
         throw new Error(data.msg || data.message || `HTTP ${res.status}: Failed to update user`);
       }
       
-      // Update the user in state
+      // Update the user in state with the complete user data from API
       setUsers(prev => prev.map(u => u._id === userId ? { ...u, ...data.user } : u));
       setEditingUser(null);
       
       // Show what was updated
       const updatedUser = data.user;
-      alert(`✅ User updated successfully!\n\nUpdated data:\n- Name: ${updatedUser.fullName}\n- Email: ${updatedUser.email}\n- Phone: ${updatedUser.phone}\n- Age: ${updatedUser.age}\n- Blood Type: ${updatedUser.bloodType}\n- City: ${updatedUser.city}\n- Weight: ${updatedUser.weight || 'N/A'}\n- Gender: ${updatedUser.gender || 'N/A'}\n- Role: ${updatedUser.isAdmin ? 'Admin' : updatedUser.isDonor ? 'Donor' : updatedUser.isRequester ? 'Requester' : 'User'}`);
+      const roleText = updatedUser.isAdmin ? 'Admin' : updatedUser.isDonor ? 'Donor' : updatedUser.isRequester ? 'Requester' : 'User';
       
-      setSuccess("User updated successfully!");
+      alert(`✅ User updated successfully!\n\nUpdated data:\n- Name: ${updatedUser.fullName}\n- Email: ${updatedUser.email}\n- Phone: ${updatedUser.phone}\n- Age: ${updatedUser.age}\n- Blood Type: ${updatedUser.bloodType}\n- City: ${updatedUser.city}\n- Weight: ${updatedUser.weight || 'N/A'}\n- Gender: ${updatedUser.gender || 'N/A'}\n- Role: ${roleText}\n- Health Status: ${updatedUser.healthStatus || 'N/A'}\n- Availability: ${updatedUser.availability || 'N/A'}\n- Units: ${updatedUser.units || 'N/A'}`);
+      
+      setSuccess(`User ${updatedUser.fullName} updated successfully!`);
       
       console.log("=== UPDATE USER SUCCESS ===");
       console.log("Updated user data:", updatedUser);
@@ -761,7 +778,8 @@ export default function UserManagement() {
                                 size="sm"
                                 className="bg-purple-100 text-purple-600 px-2 py-1 rounded-full border border-purple-200 hover:bg-purple-200 transition font-semibold flex items-center justify-center"
                                 onClick={() => {
-                                  alert(`User Data:\n\n- Name: ${user.fullName}\n- Email: ${user.email}\n- Phone: ${user.phone}\n- Age: ${user.age || 'N/A'}\n- Blood Type: ${user.bloodType}\n- City: ${user.city}\n- Weight: ${(user as any).weight || 'N/A'}\n- Gender: ${(user as any).gender || 'N/A'}\n- Role: ${user.isAdmin ? 'Admin' : user.isDonor ? 'Donor' : user.isRequester ? 'Requester' : 'User'}\n- Suspended: ${user.isSuspended ? 'Yes' : 'No'}`);
+                                  const roleText = user.isAdmin ? 'Admin' : user.isDonor ? 'Donor' : user.isRequester ? 'Requester' : 'User';
+                                  alert(`User Data:\n\n- Name: ${user.fullName}\n- Email: ${user.email}\n- Phone: ${user.phone}\n- Age: ${user.age || 'N/A'}\n- Blood Type: ${user.bloodType}\n- City: ${user.city}\n- Weight: ${user.weight || 'N/A'}\n- Gender: ${user.gender || 'N/A'}\n- Role: ${roleText}\n- Health Status: ${user.healthStatus || 'N/A'}\n- Availability: ${user.availability || 'N/A'}\n- Units: ${user.units || 'N/A'}\n- Suspended: ${user.isSuspended ? 'Yes' : 'No'}\n- Created: ${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}\n- Last Updated: ${user.updatedAt ? new Date(user.updatedAt).toLocaleDateString() : 'N/A'}`);
                                 }}
                                 title="View User Data"
                               >
