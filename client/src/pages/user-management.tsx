@@ -72,7 +72,12 @@ export default function UserManagement() {
   useEffect(() => {
     const userData = localStorage.getItem("user");
     if (userData) {
-      setCurrentUser(JSON.parse(userData));
+      const user = JSON.parse(userData);
+      setCurrentUser(user);
+      console.log("Current user loaded:", user);
+      console.log("Is admin:", user.isAdmin);
+    } else {
+      console.log("No user data found in localStorage");
     }
   }, []);
 
@@ -304,7 +309,7 @@ export default function UserManagement() {
     console.log("=== UPDATE USER START ===");
     console.log("User ID:", userId);
     console.log("Is Admin:", isAdmin);
-    console.log("Current Edit Form:", editForm);
+    console.log("Current edit form:", editForm);
     
     if (!isAdmin) {
       setError("Only admins can update users");
@@ -344,15 +349,28 @@ export default function UserManagement() {
     }
 
     try {
-      // Test with minimal data first
-      const testData = {
+      // Create update data - only include fields that have values
+      const updateData: any = {
         fullName: editForm.fullName,
         email: editForm.email,
         phone: editForm.phone,
-        age: age
+        age: age,
+        bloodType: editForm.bloodType,
+        city: editForm.city
       };
 
-      console.log("Testing with minimal data:", testData);
+      // Only add optional fields if they have values
+      if (editForm.weight) {
+        updateData.weight = weight;
+      }
+      if (editForm.gender) {
+        updateData.gender = editForm.gender;
+      }
+      if (editForm.role) {
+        updateData.role = editForm.role;
+      }
+
+      console.log("Updating user with data:", updateData);
       console.log("API URL:", `https://bloods-service-api.onrender.com/api/user/${userId}/update`);
 
       const res = await fetch(`https://bloods-service-api.onrender.com/api/user/${userId}/update`, {
@@ -361,33 +379,35 @@ export default function UserManagement() {
           "Content-Type": "application/json",
           "Accept": "application/json"
         },
-        body: JSON.stringify(testData),
+        body: JSON.stringify(updateData),
       });
       
       console.log("Response status:", res.status);
       console.log("Response headers:", res.headers);
       
       const data = await res.json();
-      console.log("Update response data:", data);
+      console.log("Update response:", data);
       
       if (!res.ok) {
         console.error("API Error:", data);
-        throw new Error(data.msg || data.message || "Failed to update user");
+        throw new Error(data.msg || data.message || `HTTP ${res.status}: Failed to update user`);
       }
-      
-      console.log("Update successful!");
       
       // Update the user in state
       setUsers(prev => prev.map(u => u._id === userId ? { ...u, ...data.user } : u));
       setEditingUser(null);
       setSuccess("User updated successfully!");
       
+      console.log("=== UPDATE USER SUCCESS ===");
+      
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccess("");
       }, 3000);
     } catch (err: any) {
+      console.error("=== UPDATE USER ERROR ===");
       console.error("Update error:", err);
+      console.error("Error message:", err.message);
       setError(err.message || "Failed to update user");
       setTimeout(() => setError(""), 3000);
     }
@@ -431,7 +451,7 @@ export default function UserManagement() {
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-3xl font-bold">User Management</h1>
             {isAdmin && (
-              <Button onClick={() => setOpen(true)} className="bg-primary text-white">Add User</Button>
+            <Button onClick={() => setOpen(true)} className="bg-primary text-white">Add User</Button>
             )}
           </div>
           
@@ -454,11 +474,11 @@ export default function UserManagement() {
           <div className="flex items-center mb-4 gap-4">
             <div className="relative w-full max-w-md">
               <Search className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
-              <input
-                type="text"
+            <input
+              type="text"
                 placeholder="Search by name, email, city, blood type, phone..."
                 className="pl-10 pr-10 py-2 w-full border rounded-lg shadow-sm border-red-200 focus:border-red-500 focus:ring-red-500 focus:ring-2 transition-all duration-200"
-                value={search}
+              value={search}
                 onChange={e => {
                   setSearch(e.target.value);
                   setCurrentPage(1); // Reset to first page when searching
@@ -657,17 +677,17 @@ export default function UserManagement() {
                             <option value="user" className="text-gray-600">User</option>
                           </select>
                         ) : (
-                          <select
+                        <select
                             className={`border rounded px-2 py-1 text-sm transition-colors ${isAdmin ? 'bg-white hover:bg-gray-50' : 'bg-gray-100 cursor-not-allowed'}`}
-                            value={user.isAdmin ? "admin" : user.isDonor ? "donor" : user.isRequester ? "requester" : "user"}
-                            onChange={(e) => handleUpdateRole(user._id, e.target.value)}
+                          value={user.isAdmin ? "admin" : user.isDonor ? "donor" : user.isRequester ? "requester" : "user"}
+                          onChange={(e) => handleUpdateRole(user._id, e.target.value)}
                             disabled={!isAdmin}
                           >
                             <option value="admin" className="text-purple-600 font-medium">Admin</option>
                             <option value="donor" className="text-red-600 font-medium">Donor</option>
                             <option value="requester" className="text-blue-600 font-medium">Requester</option>
                             <option value="user" className="text-gray-600">User</option>
-                          </select>
+                        </select>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -681,11 +701,8 @@ export default function UserManagement() {
                                   console.log("=== UPDATE BUTTON CLICKED ===");
                                   console.log("Update button clicked for user:", user._id);
                                   console.log("Current edit form:", editForm);
-                                  console.log("Editing user ID:", editingUser);
-                                  
-                                  // Add immediate visual feedback
-                                  setSuccess("Update button clicked! Processing...");
-                                  
+                                  console.log("Is admin:", isAdmin);
+                                  alert("Update button clicked! Check console for details.");
                                   handleUpdateUser(user._id);
                                 }}
                               >
@@ -712,23 +729,23 @@ export default function UserManagement() {
                           )}
                           {isAdmin && (
                             user.isSuspended ? (
-                              <Button
-                                size="sm"
+                          <Button
+                            size="sm"
                                 className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full border border-gray-300 hover:bg-gray-300 transition font-semibold flex items-center justify-center"
-                                onClick={() => handleUnsuspend(user._id)}
-                              >
-                                <EyeOff className="w-4 h-4" />
-                              </Button>
-                            ) : (
-                              <Button
-                                size="sm"
+                            onClick={() => handleUnsuspend(user._id)}
+                          >
+                            <EyeOff className="w-4 h-4" />
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
                                 className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full border border-blue-200 hover:bg-blue-200 transition font-semibold flex items-center justify-center"
-                                onClick={() => handleSuspend(user._id)}
-                              >
-                                <Eye className="w-4 h-4 text-blue-600" />
-                              </Button>
+                            onClick={() => handleSuspend(user._id)}
+                          >
+                            <Eye className="w-4 h-4 text-blue-600" />
+                          </Button>
                             )
-                          )}
+                        )}
                         </div>
                       </td>
                     </tr>
