@@ -278,9 +278,12 @@ export default function UserManagement() {
 
   // Handle edit user
   const handleEditUser = (user: User) => {
-    console.log("Editing user:", user);
+    console.log("=== EDITING USER ===");
+    console.log("Original user data:", user);
+    
     setEditingUser(user._id);
-    setEditForm({
+    
+    const initialFormData = {
       fullName: user.fullName || "",
       email: user.email || "",
       phone: user.phone || "",
@@ -290,18 +293,14 @@ export default function UserManagement() {
       weight: (user as any).weight ? (user as any).weight.toString() : "",
       gender: (user as any).gender || "",
       role: user.isAdmin ? "admin" : user.isDonor ? "donor" : user.isRequester ? "requester" : "user"
-    });
-    console.log("Edit form initialized:", {
-      fullName: user.fullName || "",
-      email: user.email || "",
-      phone: user.phone || "",
-      age: user.age ? user.age.toString() : "",
-      bloodType: user.bloodType || "",
-      city: user.city || "",
-      weight: (user as any).weight ? (user as any).weight.toString() : "",
-      gender: (user as any).gender || "",
-      role: user.isAdmin ? "admin" : user.isDonor ? "donor" : user.isRequester ? "requester" : "user"
-    });
+    };
+    
+    setEditForm(initialFormData);
+    
+    console.log("Edit form initialized with:", initialFormData);
+    
+    // Show current data to user
+    alert(`Editing user: ${user.fullName}\n\nCurrent data:\n- Name: ${user.fullName}\n- Email: ${user.email}\n- Phone: ${user.phone}\n- Age: ${user.age || 'N/A'}\n- Blood Type: ${user.bloodType}\n- City: ${user.city}\n- Weight: ${(user as any).weight || 'N/A'}\n- Gender: ${(user as any).gender || 'N/A'}\n- Role: ${user.isAdmin ? 'Admin' : user.isDonor ? 'Donor' : user.isRequester ? 'Requester' : 'User'}`);
   };
 
   // Handle update user
@@ -396,6 +395,21 @@ export default function UserManagement() {
       formData.forEach((value, key) => {
         console.log(`${key}: ${value}`);
       });
+      
+      // Show user what data is being sent
+      const dataToShow = {
+        fullName: updateData.fullName,
+        email: updateData.email,
+        phone: updateData.phone,
+        age: updateData.age,
+        bloodType: updateData.bloodType,
+        city: updateData.city,
+        weight: updateData.weight || 'Not provided',
+        gender: updateData.gender || 'Not provided',
+        role: updateData.role || 'Not provided'
+      };
+      
+      alert(`Updating user with data:\n\n${Object.entries(dataToShow).map(([key, value]) => `- ${key}: ${value}`).join('\n')}`);
 
       const res = await fetch(`https://bloods-service-api.onrender.com/api/user/${userId}/update`, {
         method: "PUT",
@@ -416,9 +430,15 @@ export default function UserManagement() {
       // Update the user in state
       setUsers(prev => prev.map(u => u._id === userId ? { ...u, ...data.user } : u));
       setEditingUser(null);
+      
+      // Show what was updated
+      const updatedUser = data.user;
+      alert(`✅ User updated successfully!\n\nUpdated data:\n- Name: ${updatedUser.fullName}\n- Email: ${updatedUser.email}\n- Phone: ${updatedUser.phone}\n- Age: ${updatedUser.age}\n- Blood Type: ${updatedUser.bloodType}\n- City: ${updatedUser.city}\n- Weight: ${updatedUser.weight || 'N/A'}\n- Gender: ${updatedUser.gender || 'N/A'}\n- Role: ${updatedUser.isAdmin ? 'Admin' : updatedUser.isDonor ? 'Donor' : updatedUser.isRequester ? 'Requester' : 'User'}`);
+      
       setSuccess("User updated successfully!");
       
       console.log("=== UPDATE USER SUCCESS ===");
+      console.log("Updated user data:", updatedUser);
       
       // Clear success message after 3 seconds
       setTimeout(() => {
@@ -736,15 +756,27 @@ export default function UserManagement() {
                               </Button>
                             </>
                           ) : (
-                            isAdmin && (
+                            <>
                               <Button
                                 size="sm"
-                                className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full border border-blue-200 hover:bg-blue-200 transition font-semibold flex items-center justify-center"
-                                onClick={() => handleEditUser(user)}
+                                className="bg-purple-100 text-purple-600 px-2 py-1 rounded-full border border-purple-200 hover:bg-purple-200 transition font-semibold flex items-center justify-center"
+                                onClick={() => {
+                                  alert(`User Data:\n\n- Name: ${user.fullName}\n- Email: ${user.email}\n- Phone: ${user.phone}\n- Age: ${user.age || 'N/A'}\n- Blood Type: ${user.bloodType}\n- City: ${user.city}\n- Weight: ${(user as any).weight || 'N/A'}\n- Gender: ${(user as any).gender || 'N/A'}\n- Role: ${user.isAdmin ? 'Admin' : user.isDonor ? 'Donor' : user.isRequester ? 'Requester' : 'User'}\n- Suspended: ${user.isSuspended ? 'Yes' : 'No'}`);
+                                }}
+                                title="View User Data"
                               >
-                                <Edit className="w-4 h-4" />
+                                <Eye className="w-4 h-4" />
                               </Button>
-                            )
+                              {isAdmin && (
+                                <Button
+                                  size="sm"
+                                  className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full border border-blue-200 hover:bg-blue-200 transition font-semibold flex items-center justify-center"
+                                  onClick={() => handleEditUser(user)}
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                              )}
+                            </>
                           )}
                           {isAdmin && (
                             user.isSuspended ? (
