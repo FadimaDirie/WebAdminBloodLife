@@ -40,6 +40,7 @@ type User = {
 
 export default function UserManagement() {
   const [open, setOpen] = useState(false);
+  const [updateModalOpen, setUpdateModalOpen] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [, setLocation] = useLocation();
@@ -57,17 +58,7 @@ export default function UserManagement() {
     role: "", // add role field
     gender: "", // add gender field
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(""); // Add success message state
-  const [search, setSearch] = useState("");
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [loadingCity, setLoadingCity] = useState(true);
-  const [cityData, setCityData] = useState<any[]>([]);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({
+  const [updateForm, setUpdateForm] = useState({
     fullName: "",
     email: "",
     phone: "",
@@ -78,6 +69,16 @@ export default function UserManagement() {
     gender: "",
     role: ""
   });
+  const [selectedUserForUpdate, setSelectedUserForUpdate] = useState<User | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(""); // Add success message state
+  const [search, setSearch] = useState("");
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [loadingCity, setLoadingCity] = useState(true);
+  const [cityData, setCityData] = useState<any[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -291,203 +292,146 @@ export default function UserManagement() {
     }
   };
 
-  // Handle edit user
-  const handleEditUser = (user: User) => {
-    console.log("=== EDITING USER ===");
-    console.log("Original user data:", user);
-    
-    setEditingUser(user._id);
-    
-    const initialFormData = {
+  // New functions for update modal
+  const handleOpenUpdateModal = (user: User) => {
+    setSelectedUserForUpdate(user);
+    setUpdateForm({
       fullName: user.fullName || "",
       email: user.email || "",
       phone: user.phone || "",
-      age: user.age ? user.age.toString() : "",
+      age: user.age?.toString() || "",
       bloodType: user.bloodType || "",
       city: user.city || "",
-      weight: (user as any).weight ? (user as any).weight.toString() : "",
-      gender: (user as any).gender || "",
+      weight: (user as any).weight?.toString() || "",
+      gender: user.gender || "",
       role: user.isAdmin ? "admin" : user.isDonor ? "donor" : user.isRequester ? "requester" : "user"
-    };
-    
-    setEditForm(initialFormData);
-    
-    console.log("Edit form initialized with:", initialFormData);
-    
-    // Show current data to user
-    alert(`Editing user: ${user.fullName}\n\nCurrent data:\n- Name: ${user.fullName}\n- Email: ${user.email}\n- Phone: ${user.phone}\n- Age: ${user.age || 'N/A'}\n- Blood Type: ${user.bloodType}\n- City: ${user.city}\n- Weight: ${(user as any).weight || 'N/A'}\n- Gender: ${(user as any).gender || 'N/A'}\n- Role: ${user.isAdmin ? 'Admin' : user.isDonor ? 'Donor' : user.isRequester ? 'Requester' : 'User'}`);
+    });
+    setUpdateModalOpen(true);
   };
 
-  // Handle update user
-  const handleUpdateUser = async (userId: string) => {
-    alert("Update function called! User ID: " + userId);
-    console.log("=== UPDATE USER START ===");
-    console.log("User ID:", userId);
-    console.log("Is Admin:", isAdmin);
-    console.log("Current edit form:", editForm);
-    
+  const handleUpdateModalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUserForUpdate) return;
+
     if (!isAdmin) {
       setError("Only admins can update users");
-      setTimeout(() => setError(""), 3000);
       return;
     }
 
-    // Validate required fields
-    if (!editForm.fullName || !editForm.email || !editForm.phone || !editForm.age || !editForm.bloodType || !editForm.city) {
-      console.log("Validation failed - missing fields:", {
-        fullName: !!editForm.fullName,
-        email: !!editForm.email,
-        phone: !!editForm.phone,
-        age: !!editForm.age,
-        bloodType: !!editForm.bloodType,
-        city: !!editForm.city
-      });
-      setError("Please fill in all required fields");
-      setTimeout(() => setError(""), 3000);
+    // Validation
+    if (!updateForm.fullName || !updateForm.email || !updateForm.phone || !updateForm.age || !updateForm.bloodType || !updateForm.city) {
+      setError("Please fill all required fields");
       return;
     }
 
-    // Validate age and weight
-    const age = Number(editForm.age);
-    const weight = Number(editForm.weight);
-    
-    if (isNaN(age) || age < 1 || age > 120) {
+    const age = parseInt(updateForm.age);
+    const weight = updateForm.weight ? parseInt(updateForm.weight) : undefined;
+
+    if (age < 1 || age > 120) {
       setError("Age must be between 1 and 120");
-      setTimeout(() => setError(""), 3000);
       return;
     }
 
-    if (editForm.weight && (isNaN(weight) || weight < 1 || weight > 300)) {
+    if (weight && (weight < 1 || weight > 300)) {
       setError("Weight must be between 1 and 300 kg");
-      setTimeout(() => setError(""), 3000);
       return;
     }
+
+    setLoading(true);
+    setError("");
+    setSuccess("");
 
     try {
-      // Create update data - only include fields that have values
-      const updateData: any = {
-        fullName: editForm.fullName,
-        email: editForm.email,
-        phone: editForm.phone,
-        age: age,
-        bloodType: editForm.bloodType,
-        city: editForm.city
-      };
-
-      // Only add optional fields if they have values
-      if (editForm.weight) {
-        updateData.weight = weight;
-      }
-      if (editForm.gender) {
-        updateData.gender = editForm.gender;
-      }
-      if (editForm.role) {
-        updateData.role = editForm.role;
-      }
-
-      console.log("Updating user with data:", updateData);
-      console.log("API URL:", `https://bloods-service-api.onrender.com/api/user/${userId}/update`);
-
-      // Convert data to FormData as the API expects form-data
       const formData = new FormData();
-      formData.append('fullName', updateData.fullName);
-      formData.append('email', updateData.email);
-      formData.append('phone', updateData.phone);
-      formData.append('age', updateData.age.toString());
-      formData.append('bloodType', updateData.bloodType);
-      formData.append('city', updateData.city);
-      
-      if (updateData.weight) {
-        formData.append('weight', updateData.weight.toString());
+      formData.append('fullName', updateForm.fullName);
+      formData.append('email', updateForm.email);
+      formData.append('phone', updateForm.phone);
+      formData.append('age', updateForm.age);
+      formData.append('bloodType', updateForm.bloodType);
+      formData.append('city', updateForm.city);
+      if (updateForm.weight) {
+        formData.append('weight', updateForm.weight);
       }
-      if (updateData.gender) {
-        formData.append('gender', updateData.gender);
+      if (updateForm.gender) {
+        formData.append('gender', updateForm.gender);
       }
-      if (updateData.role) {
-        formData.append('role', updateData.role);
+      if (updateForm.role) {
+        formData.append('role', updateForm.role);
       }
 
-      console.log("FormData entries:");
-      formData.forEach((value, key) => {
-        console.log(`${key}: ${value}`);
-      });
-      
-      // Show user what data is being sent
-      const dataToShow = {
-        fullName: updateData.fullName,
-        email: updateData.email,
-        phone: updateData.phone,
-        age: updateData.age,
-        bloodType: updateData.bloodType,
-        city: updateData.city,
-        weight: updateData.weight || 'Not provided',
-        gender: updateData.gender || 'Not provided',
-        role: updateData.role || 'Not provided'
-      };
-      
-      alert(`Updating user with data:\n\n${Object.entries(dataToShow).map(([key, value]) => `- ${key}: ${value}`).join('\n')}`);
+      console.log("=== UPDATE MODAL SUBMIT ===");
+      console.log("User ID:", selectedUserForUpdate._id);
+      console.log("Form data:", updateForm);
 
-      const res = await fetch(`https://bloods-service-api.onrender.com/api/user/${userId}/update`, {
-        method: "PUT",
+      const response = await fetch(`https://bloods-service-api.onrender.com/api/user/${selectedUserForUpdate._id}/update`, {
+        method: 'PUT',
         headers: {
-          "Accept": "application/json",
+          'Accept': 'application/json',
         },
-        body: formData,
+        body: formData
       });
-      
-      console.log("Response status:", res.status);
-      console.log("Response headers:", res.headers);
-      
-      const data = await res.json();
-      console.log("Update response:", data);
-      
-      if (!res.ok) {
-        console.error("API Error:", data);
-        throw new Error(data.msg || data.message || `HTTP ${res.status}: Failed to update user`);
+
+      console.log("Response status:", response.status);
+      console.log("Response headers:", response.headers);
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("Update successful:", result);
+        setSuccess("User updated successfully!");
+        
+        // Update the users list
+        setUsers(prevUsers => 
+          prevUsers.map(user => 
+            user._id === selectedUserForUpdate._id 
+              ? { 
+                  ...user, 
+                  fullName: updateForm.fullName,
+                  email: updateForm.email,
+                  phone: updateForm.phone,
+                  age: parseInt(updateForm.age),
+                  bloodType: updateForm.bloodType,
+                  city: updateForm.city,
+                  weight: updateForm.weight ? parseInt(updateForm.weight) : undefined,
+                  ...(updateForm.gender && { gender: updateForm.gender }),
+                  ...(updateForm.role && { 
+                    isAdmin: updateForm.role === "admin",
+                    isDonor: updateForm.role === "donor",
+                    isRequester: updateForm.role === "requester"
+                  })
+                } as User
+              : user
+          )
+        );
+        
+        setUpdateModalOpen(false);
+        setSelectedUserForUpdate(null);
+        setUpdateForm({
+          fullName: "",
+          email: "",
+          phone: "",
+          age: "",
+          bloodType: "",
+          city: "",
+          weight: "",
+          gender: "",
+          role: ""
+        });
+      } else {
+        const errorData = await response.json();
+        console.error("Update failed:", errorData);
+        setError(errorData.message || "Failed to update user");
       }
-      
-      // Update the user in state with the complete user data from API
-      setUsers(prev => prev.map(u => u._id === userId ? { ...u, ...data.user } : u));
-      setEditingUser(null);
-      
-      // Show what was updated
-      const updatedUser = data.user;
-      const roleText = updatedUser.isAdmin ? 'Admin' : updatedUser.isDonor ? 'Donor' : updatedUser.isRequester ? 'Requester' : 'User';
-      
-      alert(`✅ User updated successfully!\n\nUpdated data:\n- Name: ${updatedUser.fullName}\n- Email: ${updatedUser.email}\n- Phone: ${updatedUser.phone}\n- Age: ${updatedUser.age}\n- Blood Type: ${updatedUser.bloodType}\n- City: ${updatedUser.city}\n- Weight: ${updatedUser.weight || 'N/A'}\n- Gender: ${updatedUser.gender || 'N/A'}\n- Role: ${roleText}\n- Health Status: ${updatedUser.healthStatus || 'N/A'}\n- Availability: ${updatedUser.availability || 'N/A'}\n- Units: ${updatedUser.units || 'N/A'}`);
-      
-      setSuccess(`User ${updatedUser.fullName} updated successfully!`);
-      
-      console.log("=== UPDATE USER SUCCESS ===");
-      console.log("Updated user data:", updatedUser);
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccess("");
-      }, 3000);
     } catch (err: any) {
-      console.error("=== UPDATE USER ERROR ===");
       console.error("Update error:", err);
-      console.error("Error message:", err.message);
-      setError(err.message || "Failed to update user");
-      setTimeout(() => setError(""), 3000);
+      setError("Failed to update user");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Handle cancel edit
-  const handleCancelEdit = () => {
-    setEditingUser(null);
-    setEditForm({
-      fullName: "",
-      email: "",
-      phone: "",
-      age: "",
-      bloodType: "",
-      city: "",
-      weight: "",
-      gender: "",
-      role: ""
-    });
+  const handleUpdateFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setUpdateForm(prev => ({ ...prev, [name]: value }));
   };
 
   // Helper for profile image
@@ -500,43 +444,13 @@ export default function UserManagement() {
     return `https://bloods-service-api.onrender.com/uploads/${profilePic}`;
   };
 
-  const BLOOD_TYPES = ["A+", "O+", "AB+", "O-", "A-", "B-", "AB-"];
+  const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
   const BLOOD_COLORS = ["#a259f7", "#f759e4", "#10B981", "#F59E0B", "#EF4444", "#6366F1", "#3B82F6"];
 
-  // Test update function
-  const testUpdate = async (userId: string) => {
-    try {
-      alert("Testing update for user: " + userId);
-      
-      const testData = new FormData();
-      testData.append('fullName', 'Test Update');
-      testData.append('email', 'test@test.com');
-      testData.append('phone', '123456789');
-      testData.append('age', '25');
-      testData.append('bloodType', 'A+');
-      testData.append('city', 'Test City');
-      
-      console.log("Testing API call...");
-      
-      const res = await fetch(`https://bloods-service-api.onrender.com/api/user/${userId}/update`, {
-        method: "PUT",
-        body: testData,
-      });
-      
-      console.log("Test response status:", res.status);
-      const data = await res.json();
-      console.log("Test response data:", data);
-      
-      if (res.ok) {
-        alert("✅ Test update successful! Check console for details.");
-      } else {
-        alert("❌ Test update failed: " + data.msg);
-      }
-    } catch (err) {
-      console.error("Test update error:", err);
-      alert("❌ Test update error: " + err.message);
-    }
-  };
+  // Test update function - no longer needed
+  // const testUpdate = async (userId: string) => {
+  //   // This function is no longer needed
+  // };
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
@@ -656,212 +570,71 @@ export default function UserManagement() {
                           className="w-9 h-9 rounded-full object-cover border"
                         />
                         <div className="flex flex-col gap-1">
-                          {editingUser === user._id ? (
-                            <input
-                              type="text"
-                              value={editForm.fullName}
-                              onChange={(e) => setEditForm({...editForm, fullName: e.target.value})}
-                              className="border rounded px-2 py-1 text-sm w-full"
-                              placeholder="Full Name"
-                            />
-                          ) : (
-                            <div className="font-medium">{user.fullName}</div>
-                          )}
-                          {editingUser === user._id ? (
-                            <input
-                              type="email"
-                              value={editForm.email}
-                              onChange={(e) => setEditForm({...editForm, email: e.target.value})}
-                              className="border rounded px-2 py-1 text-sm w-full text-gray-600"
-                              placeholder="Email"
-                            />
-                          ) : (
-                            <div className="text-sm text-gray-500">{user.email}</div>
-                          )}
+                          <div className="font-medium">{user.fullName}</div>
+                          <div className="text-sm text-gray-500">{user.email}</div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {editingUser === user._id ? (
-                          <input
-                            type="text"
-                            value={editForm.city}
-                            onChange={(e) => setEditForm({...editForm, city: e.target.value})}
-                            className="border rounded px-2 py-1 text-sm w-full"
-                          />
-                        ) : (
-                          user.city
-                        )}
+                        {user.city}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {editingUser === user._id ? (
-                          <select
-                            value={editForm.bloodType}
-                            onChange={(e) => setEditForm({...editForm, bloodType: e.target.value})}
-                            className="border rounded px-2 py-1 text-sm w-full"
-                          >
-                            <option value="A+">A+</option>
-                            <option value="A-">A-</option>
-                            <option value="B+">B+</option>
-                            <option value="B-">B-</option>
-                            <option value="AB+">AB+</option>
-                            <option value="AB-">AB-</option>
-                            <option value="O+">O+</option>
-                            <option value="O-">O-</option>
-                          </select>
-                        ) : (
-                          user.bloodType
-                        )}
+                        {user.bloodType}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {editingUser === user._id ? (
-                          <input
-                            type="text"
-                            value={editForm.phone}
-                            onChange={(e) => setEditForm({...editForm, phone: e.target.value})}
-                            className="border rounded px-2 py-1 text-sm w-full"
-                          />
-                        ) : (
-                          user.phone
-                        )}
+                        {user.phone}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {editingUser === user._id ? (
-                          <input
-                            type="number"
-                            min="1"
-                            max="120"
-                            value={editForm.age}
-                            onChange={(e) => {
-                              console.log("Age input changed:", e.target.value);
-                              setEditForm({...editForm, age: e.target.value});
-                            }}
-                            className="border rounded px-2 py-1 text-sm w-full"
-                            placeholder="Age"
-                          />
-                        ) : (
-                          user.age
-                        )}
+                        {user.age}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {editingUser === user._id ? (
-                          <input
-                            type="number"
-                            min="1"
-                            max="300"
-                            value={editForm.weight}
-                            onChange={(e) => {
-                              console.log("Weight input changed:", e.target.value);
-                              setEditForm({...editForm, weight: e.target.value});
-                            }}
-                            className="border rounded px-2 py-1 text-sm w-full"
-                            placeholder="Weight (kg)"
-                          />
-                        ) : (
-                          (user as any).weight || "N/A"
-                        )}
+                        {(user as any).weight || "N/A"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {editingUser === user._id ? (
-                          <select
-                            className="border rounded px-2 py-1 text-sm w-full bg-white hover:bg-gray-50 transition-colors"
-                            value={editForm.role || (user.isAdmin ? "admin" : user.isDonor ? "donor" : user.isRequester ? "requester" : "user")}
-                            onChange={(e) => setEditForm({...editForm, role: e.target.value})}
-                          >
-                            <option value="admin" className="text-purple-600 font-medium">Admin</option>
-                            <option value="donor" className="text-red-600 font-medium">Donor</option>
-                            <option value="requester" className="text-blue-600 font-medium">Requester</option>
-                            <option value="user" className="text-gray-600">User</option>
-                          </select>
-                        ) : (
                         <select
-                            className={`border rounded px-2 py-1 text-sm transition-colors ${isAdmin ? 'bg-white hover:bg-gray-50' : 'bg-gray-100 cursor-not-allowed'}`}
+                          className={`border rounded px-2 py-1 text-sm transition-colors ${isAdmin ? 'bg-white hover:bg-gray-50' : 'bg-gray-100 cursor-not-allowed'}`}
                           value={user.isAdmin ? "admin" : user.isDonor ? "donor" : user.isRequester ? "requester" : "user"}
                           onChange={(e) => handleUpdateRole(user._id, e.target.value)}
-                            disabled={!isAdmin}
-                          >
-                            <option value="admin" className="text-purple-600 font-medium">Admin</option>
-                            <option value="donor" className="text-red-600 font-medium">Donor</option>
-                            <option value="requester" className="text-blue-600 font-medium">Requester</option>
-                            <option value="user" className="text-gray-600">User</option>
+                          disabled={!isAdmin}
+                        >
+                          <option value="admin" className="text-purple-600 font-medium">Admin</option>
+                          <option value="donor" className="text-red-600 font-medium">Donor</option>
+                          <option value="requester" className="text-blue-600 font-medium">Requester</option>
+                          <option value="user" className="text-gray-600">User</option>
                         </select>
-                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          {editingUser === user._id ? (
-                            <>
-                              <Button
-                                size="sm"
-                                className="bg-green-50 text-green-500 px-2 py-1 rounded-full border border-green-100 hover:bg-green-100 transition font-semibold flex items-center justify-center"
-                                onClick={() => {
-                                  console.log("=== UPDATE BUTTON CLICKED ===");
-                                  console.log("Update button clicked for user:", user._id);
-                                  console.log("Current edit form:", editForm);
-                                  console.log("Is admin:", isAdmin);
-                                  handleUpdateUser(user._id);
-                                }}
-                              >
-                                <Save className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                className="bg-orange-50 text-orange-500 px-2 py-1 rounded-full border border-orange-100 hover:bg-orange-100 transition font-semibold flex items-center justify-center"
-                                onClick={() => testUpdate(user._id)}
-                                title="Test Update"
-                              >
-                                Test
-                              </Button>
-                              <Button
-                                size="sm"
-                                className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full border border-gray-200 hover:bg-gray-200 transition font-semibold flex items-center justify-center"
-                                onClick={handleCancelEdit}
-                              >
-                                <X className="w-4 h-4" />
-                              </Button>
-                            </>
-                          ) : (
-                            <>
-                              <Button
-                                size="sm"
-                                className="bg-purple-100 text-purple-600 px-2 py-1 rounded-full border border-purple-200 hover:bg-purple-200 transition font-semibold flex items-center justify-center"
-                                onClick={() => {
-                                  const roleText = user.isAdmin ? 'Admin' : user.isDonor ? 'Donor' : user.isRequester ? 'Requester' : 'User';
-                                  alert(`User Data:\n\n- Name: ${user.fullName}\n- Email: ${user.email}\n- Phone: ${user.phone}\n- Age: ${user.age || 'N/A'}\n- Blood Type: ${user.bloodType}\n- City: ${user.city}\n- Weight: ${user.weight || 'N/A'}\n- Gender: ${user.gender || 'N/A'}\n- Role: ${roleText}\n- Health Status: ${user.healthStatus || 'N/A'}\n- Availability: ${user.availability || 'N/A'}\n- Units: ${user.units || 'N/A'}\n- Suspended: ${user.isSuspended ? 'Yes' : 'No'}\n- Created: ${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}\n- Last Updated: ${user.updatedAt ? new Date(user.updatedAt).toLocaleDateString() : 'N/A'}`);
-                                }}
-                                title="View User Data"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                              {isAdmin && (
-                                <Button
-                                  size="sm"
-                                  className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full border border-blue-200 hover:bg-blue-200 transition font-semibold flex items-center justify-center"
-                                  onClick={() => handleEditUser(user)}
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                              )}
-                            </>
+                          {isAdmin && (
+                            <Button
+                              size="sm"
+                              className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full border border-blue-200 hover:bg-blue-200 transition font-semibold flex items-center justify-center"
+                              onClick={() => handleOpenUpdateModal(user)}
+                              title="Update User"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
                           )}
                           {isAdmin && (
                             user.isSuspended ? (
-                          <Button
-                            size="sm"
-                                className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full border border-gray-300 hover:bg-gray-300 transition font-semibold flex items-center justify-center"
-                            onClick={() => handleUnsuspend(user._id)}
-                          >
-                            <EyeOff className="w-4 h-4" />
-                          </Button>
-                        ) : (
-                          <Button
-                            size="sm"
-                                className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full border border-blue-200 hover:bg-blue-200 transition font-semibold flex items-center justify-center"
-                            onClick={() => handleSuspend(user._id)}
-                          >
-                            <Eye className="w-4 h-4 text-blue-600" />
-                          </Button>
+                              <Button
+                                size="sm"
+                                className="bg-green-100 text-green-600 px-2 py-1 rounded-full border border-green-200 hover:bg-green-200 transition font-semibold flex items-center justify-center"
+                                onClick={() => handleUnsuspend(user._id)}
+                                title="Unsuspend User"
+                              >
+                                <EyeOff className="w-4 h-4" />
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                className="bg-red-100 text-red-600 px-2 py-1 rounded-full border border-red-200 hover:bg-red-200 transition font-semibold flex items-center justify-center"
+                                onClick={() => handleSuspend(user._id)}
+                                title="Suspend User"
+                              >
+                                <Ban className="w-4 h-4" />
+                              </Button>
                             )
-                        )}
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -945,6 +718,67 @@ export default function UserManagement() {
                 {error && <div className="text-red-500 text-sm">{error}</div>}
                 {success && <div className="text-green-600 text-sm">{success}</div>}
                 <Button type="submit" className="w-full" disabled={loading}>{loading ? "Adding..." : "Add User"}</Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+          {/* Update User Modal */}
+          <Dialog open={updateModalOpen} onOpenChange={setUpdateModalOpen}>
+            <DialogContent>
+              <DialogTitle>Update User</DialogTitle>
+              <form className="space-y-4 mt-4" onSubmit={handleUpdateModalSubmit}>
+                <input className="w-full border rounded px-3 py-2" name="fullName" placeholder="Full Name" value={updateForm.fullName} onChange={handleUpdateFormChange} required />
+                <input className="w-full border rounded px-3 py-2" name="email" type="email" placeholder="Email" value={updateForm.email} onChange={handleUpdateFormChange} required />
+                <input className="w-full border rounded px-3 py-2" name="phone" placeholder="Phone" value={updateForm.phone} onChange={handleUpdateFormChange} required />
+                <input className="w-full border rounded px-3 py-2" name="age" type="number" placeholder="Age" value={updateForm.age} onChange={handleUpdateFormChange} required />
+                <select
+                  className="w-full border rounded px-3 py-2"
+                  name="bloodType"
+                  value={updateForm.bloodType}
+                  onChange={handleUpdateFormChange}
+                  required
+                >
+                  <option value="">Select Blood Type</option>
+                  {BLOOD_TYPES.map((type) => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+                <select
+                  className="w-full border rounded px-3 py-2"
+                  name="role"
+                  value={updateForm.role}
+                  onChange={handleUpdateFormChange}
+                >
+                  <option value="">Select Role (Optional)</option>
+                  <option value="admin">Admin</option>
+                  <option value="donor">Donor</option>
+                  <option value="requester">Requester</option>
+                </select>
+                <select
+                  className="w-full border rounded px-3 py-2"
+                  name="gender"
+                  value={updateForm.gender}
+                  onChange={handleUpdateFormChange}
+                >
+                  <option value="">Select Gender (Optional)</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+                <select
+                  className="w-full border rounded px-3 py-2"
+                  name="city"
+                  value={updateForm.city}
+                  onChange={handleUpdateFormChange}
+                  required
+                >
+                  <option value="">Select City</option>
+                  {cityData.map((city: any) => (
+                    <option key={city.city} value={city.city}>{city.city}</option>
+                  ))}
+                </select>
+                <input className="w-full border rounded px-3 py-2" name="weight" type="number" placeholder="Weight (kg) - Optional" value={updateForm.weight} onChange={handleUpdateFormChange} />
+                {error && <div className="text-red-500 text-sm">{error}</div>}
+                {success && <div className="text-green-600 text-sm">{success}</div>}
+                <Button type="submit" className="w-full" disabled={loading}>{loading ? "Updating..." : "Update User"}</Button>
               </form>
             </DialogContent>
           </Dialog>
