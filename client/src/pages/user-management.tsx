@@ -320,6 +320,7 @@ export default function UserManagement() {
 
   // Handle update user
   const handleUpdateUser = async (userId: string) => {
+    alert("Update function called! User ID: " + userId);
     console.log("=== UPDATE USER START ===");
     console.log("User ID:", userId);
     console.log("Is Admin:", isAdmin);
@@ -428,6 +429,9 @@ export default function UserManagement() {
 
       const res = await fetch(`https://bloods-service-api.onrender.com/api/user/${userId}/update`, {
         method: "PUT",
+        headers: {
+          "Accept": "application/json",
+        },
         body: formData,
       });
       
@@ -498,6 +502,41 @@ export default function UserManagement() {
 
   const BLOOD_TYPES = ["A+", "O+", "AB+", "O-", "A-", "B-", "AB-"];
   const BLOOD_COLORS = ["#a259f7", "#f759e4", "#10B981", "#F59E0B", "#EF4444", "#6366F1", "#3B82F6"];
+
+  // Test update function
+  const testUpdate = async (userId: string) => {
+    try {
+      alert("Testing update for user: " + userId);
+      
+      const testData = new FormData();
+      testData.append('fullName', 'Test Update');
+      testData.append('email', 'test@test.com');
+      testData.append('phone', '123456789');
+      testData.append('age', '25');
+      testData.append('bloodType', 'A+');
+      testData.append('city', 'Test City');
+      
+      console.log("Testing API call...");
+      
+      const res = await fetch(`https://bloods-service-api.onrender.com/api/user/${userId}/update`, {
+        method: "PUT",
+        body: testData,
+      });
+      
+      console.log("Test response status:", res.status);
+      const data = await res.json();
+      console.log("Test response data:", data);
+      
+      if (res.ok) {
+        alert("✅ Test update successful! Check console for details.");
+      } else {
+        alert("❌ Test update failed: " + data.msg);
+      }
+    } catch (err) {
+      console.error("Test update error:", err);
+      alert("❌ Test update error: " + err.message);
+    }
+  };
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
@@ -763,6 +802,14 @@ export default function UserManagement() {
                                 }}
                               >
                                 <Save className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                className="bg-orange-50 text-orange-500 px-2 py-1 rounded-full border border-orange-100 hover:bg-orange-100 transition font-semibold flex items-center justify-center"
+                                onClick={() => testUpdate(user._id)}
+                                title="Test Update"
+                              >
+                                Test
                               </Button>
                               <Button
                                 size="sm"
