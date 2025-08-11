@@ -530,13 +530,13 @@ export default function UserManagement() {
             <table className="w-full min-w-[900px] divide-y divide-red-200 text-base">
               <thead className="bg-red-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-base font-bold text-red-700 uppercase tracking-wider rounded-tl-2xl">Name</th>
-                  <th className="px-6 py-4 text-left text-base font-bold text-red-700 uppercase tracking-wider">City</th>
-                  <th className="px-6 py-4 text-left text-base font-bold text-red-700 uppercase tracking-wider">Blood Type</th>
-                  <th className="px-6 py-4 text-left text-base font-bold text-red-700 uppercase tracking-wider">Phone</th>
-                  <th className="px-6 py-4 text-left text-base font-bold text-red-700 uppercase tracking-wider">Age</th>
-                  <th className="px-6 py-4 text-left text-base font-bold text-red-700 uppercase tracking-wider">Role</th> {/* Role column */}
-                  <th className="px-6 py-4 text-left text-base font-bold text-red-700 uppercase tracking-wider rounded-tr-2xl">Actions</th>
+                  <th className="px-6 py-4 text-left text-base font-bold text-red-700  rounded-tl-2xl">Name</th>
+                  <th className="px-6 py-4 text-left text-base font-bold text-red-700 ">City</th>
+                  <th className="px-6 py-4 text-left text-base font-bold text-red-700 ">BloodType</th>
+                  <th className="px-6 py-4 text-left text-base font-bold text-red-700 ">Phone</th>
+                  <th className="px-6 py-4 text-left text-base font-bold text-red-700 ">Age</th>
+                  <th className="px-6 py-4 text-left text-base font-bold text-red-700 ">Role</th> {/* Role column */}
+                  <th className="px-6 py-4 text-left text-base font-bold text-red-700  rounded-tr-2xl">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-red-300">
