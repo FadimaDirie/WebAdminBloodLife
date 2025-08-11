@@ -33,14 +33,16 @@ function Router() {
     const currentPath = window.location.pathname;
     const loggedIn = isAuthenticated();
 
-    if (!loggedIn && currentPath !== "/login") {
+    // Only redirect if not logged in and not already on login page
+    if (!loggedIn && currentPath !== "/login" && currentPath !== "/index.html") {
       setLocation("/login");
       return;
     }
+    // Only redirect to dashboard if logged in and on login-related pages
     if (loggedIn && (currentPath === "/" || currentPath === "/login" || currentPath === "/index" || currentPath === "/index.html")) {
       setLocation("/dashboard");
     }
-  }, [location]);
+  }, [location, setLocation]); // Run on every location change and refresh
 
   return (
     <Switch>
