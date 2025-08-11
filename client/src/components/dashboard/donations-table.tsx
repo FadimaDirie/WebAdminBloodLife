@@ -19,23 +19,23 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+// Update the Donation interface to match the API
 interface Donation {
   id: string;
-  donor: {
-    name: string;
-    id: string;
+  donorId: {
+    fullName: string;
     avatar?: string;
-  };
-  recipient: {
-    name: string;
-    id: string;
+    _id?: string;
+  } | null;
+  requesterId: {
+    fullName: string;
     avatar?: string;
-  };
-  bloodType: string;
-  date: string;
-  location: string;
-  status: string; // Made dynamic to accept any status from API
-  txHash: string;
+    _id?: string;
+  } | null;
+  hospitalName?: string;
+  location?: string;
+  status: string;
+  createdAt: string;
 }
 
 interface DonationsTableProps {
@@ -49,10 +49,11 @@ export default function DonationsTable({ donations }: DonationsTableProps) {
   const itemsPerPage = 10;
 
   const filteredDonations = donations.filter(donation => {
-    const matchesSearch = donation.donor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         donation.donor.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         donation.location.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesBloodType = selectedBloodType === "all" || donation.bloodType === selectedBloodType;
+    const matchesSearch = donation.donorId?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         donation.requesterId?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         donation.hospitalName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         donation.location?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesBloodType = selectedBloodType === "all" || donation.status === selectedBloodType; // Assuming status is the blood type for now
     return matchesSearch && matchesBloodType;
   });
 
@@ -97,20 +98,27 @@ export default function DonationsTable({ donations }: DonationsTableProps) {
     return bloodColors[bloodType] || 'bg-red-100 text-red-800';
   };
 
+  // Helper for date formatting
+  function formatDate(dateStr: string) {
+    if (!dateStr) return '-';
+    const d = new Date(dateStr);
+    return d.toLocaleString('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+  }
+
   // Export functionality for filtered donations
   const exportDonations = () => {
     const timestamp = new Date().toISOString().split('T')[0];
     const filename = `donations_export_${timestamp}.csv`;
     
-    // Create CSV content with updated columns
-    let csvContent = 'Location,Recipient,Status,Blood Type,Date\n';
+    // Create CSV content with new column order
+    let csvContent = 'Donor,Location,Recipient,Status,Date\n';
     
     filteredDonations.forEach(donation => {
-      const location = donation.location || 'Unknown';
-      const recipient = donation.recipient?.name || 'Unknown';
-      const status = donation.status || 'Unknown';
-      const bloodType = donation.bloodType || 'Unknown';
-      const date = donation.date || 'Unknown';
+      const donor = donation.donorId?.fullName || '-';
+      const location = donation.hospitalName || donation.location || '-';
+      const recipient = donation.requesterId?.fullName || '-';
+      const status = donation.status || '-';
+      const date = formatDate(donation.createdAt);
       
       // Escape commas and quotes in CSV
       const escapeCSV = (str: string) => {
@@ -120,7 +128,7 @@ export default function DonationsTable({ donations }: DonationsTableProps) {
         return str;
       };
       
-      csvContent += `${escapeCSV(location)},${escapeCSV(recipient)},${escapeCSV(status)},${escapeCSV(bloodType)},${escapeCSV(date)}\n`;
+      csvContent += [donor, location, recipient, status, date].map(escapeCSV).join(',') + '\n';
     });
     
     // Create and download file
@@ -186,6 +194,9 @@ export default function DonationsTable({ donations }: DonationsTableProps) {
             <thead className="bg-red-400">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-black-500 uppercase tracking-wider">
+                  Donor
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-black-500 uppercase tracking-wider">
                   Location
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-black-500 uppercase tracking-wider">
@@ -194,36 +205,30 @@ export default function DonationsTable({ donations }: DonationsTableProps) {
                 <th className="px-6 py-3 text-left text-xs font-medium text-black-500 uppercase tracking-wider">
                   Status
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-black-500 uppercase tracking-wider">
+                  Date
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-red-400">
               {paginatedDonations.map((donation) => (
                 <tr key={donation.id} className="hover:bg-red-100">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {donation.location || 'Unknown'}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {donation.donorId?.fullName || '-'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={donation.recipient?.avatar || '/default-profile.png'} />
-                        <AvatarFallback>
-                          {(donation.recipient?.name || '-').split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
-                          {donation.recipient?.name || 'Unknown'}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {donation.recipient?.id || '-'}
-                        </div>
-                      </div>
-                    </div>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {donation.hospitalName || donation.location || '-'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {donation.requesterId?.fullName || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <Badge className={getStatusColor(donation.status)}>
-                      {donation.status || 'Unknown'}
+                      {donation.status || '-'}
                     </Badge>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {formatDate(donation.createdAt)}
                   </td>
                 </tr>
               ))}
