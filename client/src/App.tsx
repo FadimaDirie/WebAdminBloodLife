@@ -61,12 +61,21 @@ function Router() {
       }
     };
 
+    const handleLoad = () => {
+      // This will trigger on every page load/refresh
+      if (!isAuthenticated() && window.location.pathname !== "/login") {
+        setLocation("/login");
+      }
+    };
+
     window.addEventListener('beforeunload', handleBeforeUnload);
     window.addEventListener('focus', handleFocus);
+    window.addEventListener('load', handleLoad);
 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('load', handleLoad);
     };
   }, [setLocation]);
 
