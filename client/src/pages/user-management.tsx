@@ -615,7 +615,7 @@ export default function UserManagement() {
                           {isAdmin && (
                             <Button
                               size="sm"
-                              className="bg-green-200 text-green-900 px-2 py-1 rounded-full border border-green-200 hover:bg-green-200 transition font-semibold flex items-center justify-center"
+                              className="bg-green-100 text-green-500 px-2 py-1 rounded-full border border-green-200 hover:bg-green-200 transition font-semibold flex items-center justify-center"
                               onClick={() => handleOpenUpdateModal(user)}
                               title="Update User"
                             >
@@ -635,7 +635,7 @@ export default function UserManagement() {
                             ) : (
                               <Button
                                 size="sm"
-                                className="bg-blue-200 text-blue-900 px-2 py-1 rounded-full border border-blue-200 hover:bg-blue-200 transition font-semibold flex items-center justify-center"
+                                className="bg-blue-100 text-blue-500 px-2 py-1 rounded-full border border-blue-200 hover:bg-blue-200 transition font-semibold flex items-center justify-center"
                                 onClick={() => handleSuspend(user._id)}
                                 title="Suspend User"
                               >
