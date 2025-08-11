@@ -34,24 +34,15 @@ export default function RecentDonations() {
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data.orders)) {
-          setDonations(data.orders.map((order: any) => ({
+          const mapped = data.orders.map((order: any) => ({
             id: order._id,
-            donor: order.donorId ? {
-              name: order.donorId.fullName,
-              id: order.donorId._id,
-              avatar: order.donorId.profilePic || order.donorId.avatar,
-            } : { name: "-", id: "-", avatar: undefined },
-            recipient: order.requesterId ? {
-              name: order.requesterId.fullName,
-              id: order.requesterId._id,
-              avatar: order.requesterId.profilePic || order.requesterId.avatar,
-            } : { name: "-", id: "-", avatar: undefined },
-            bloodType: order.bloodType,
-            date: new Date(order.createdAt).toLocaleString(),
-            location: order.hospitalName,
-            status: order.status === 'accepted' ? 'Verified' : order.status === 'waiting' ? 'Processing' : 'Pending',
-            txHash: order._id.slice(-8),
-          })));
+            donorId: order.donorId || null, // { fullName, _id, avatar? }
+            requesterId: order.requesterId || null, // { fullName, _id, avatar? }
+            hospitalName: order.hospitalName || '-',
+            status: order.status || '-',
+            createdAt: order.createdAt,
+          }));
+          setDonations(mapped);
         }
       })
       .finally(() => setLoading(false));

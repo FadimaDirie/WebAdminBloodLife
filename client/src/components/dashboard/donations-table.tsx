@@ -49,11 +49,12 @@ export default function DonationsTable({ donations }: DonationsTableProps) {
   const itemsPerPage = 10;
 
   const filteredDonations = donations.filter(donation => {
-    const matchesSearch = donation.donorId?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         donation.requesterId?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         donation.hospitalName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         donation.location?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesBloodType = selectedBloodType === "all" || donation.status === selectedBloodType; // Assuming status is the blood type for now
+    const donorName = donation.donorId?.fullName?.toLowerCase() || "";
+    const donorId = donation.donorId?._id?.toLowerCase() || "";
+    const locationStr = (donation.hospitalName || donation.location || "").toLowerCase();
+    const term = searchTerm.toLowerCase();
+    const matchesSearch = donorName.includes(term) || donorId.includes(term) || locationStr.includes(term);
+    const matchesBloodType = selectedBloodType === "all"; // bloodType not available in this view
     return matchesSearch && matchesBloodType;
   });
 
