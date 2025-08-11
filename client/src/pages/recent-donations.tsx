@@ -36,11 +36,12 @@ export default function RecentDonations() {
         if (Array.isArray(data.orders)) {
           const mapped = data.orders.map((order: any) => ({
             id: order._id,
-            donorId: order.donorId || null, // { fullName, _id, avatar? }
-            requesterId: order.requesterId || null, // { fullName, _id, avatar? }
+            donorId: order.donorId || null,
+            requesterId: order.requesterId || null,
             hospitalName: order.hospitalName || '-',
             status: order.status || '-',
             createdAt: order.createdAt,
+            bloodType: order.bloodType || undefined,
           }));
           setDonations(mapped);
         }

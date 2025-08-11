@@ -36,6 +36,7 @@ interface Donation {
   location?: string;
   status: string;
   createdAt: string;
+  bloodType?: string;
 }
 
 interface DonationsTableProps {
@@ -54,7 +55,7 @@ export default function DonationsTable({ donations }: DonationsTableProps) {
     const locationStr = (donation.hospitalName || donation.location || "").toLowerCase();
     const term = searchTerm.toLowerCase();
     const matchesSearch = donorName.includes(term) || donorId.includes(term) || locationStr.includes(term);
-    const matchesBloodType = selectedBloodType === "all"; // bloodType not available in this view
+    const matchesBloodType = selectedBloodType === "all" || donation.bloodType === selectedBloodType;
     return matchesSearch && matchesBloodType;
   });
 
