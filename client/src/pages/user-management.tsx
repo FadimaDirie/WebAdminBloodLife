@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import Header from "@/components/layout/header";
-import { Ban, Eye, EyeOff, Edit, Save, X, Search } from "lucide-react";
+import { Eye, EyeOff, Edit, X, Search } from "lucide-react";
 
 type User = {
   _id: string;
@@ -535,7 +535,6 @@ export default function UserManagement() {
                   <th className="px-6 py-4 text-left text-base font-bold text-red-700 uppercase tracking-wider">Blood Type</th>
                   <th className="px-6 py-4 text-left text-base font-bold text-red-700 uppercase tracking-wider">Phone</th>
                   <th className="px-6 py-4 text-left text-base font-bold text-red-700 uppercase tracking-wider">Age</th>
-                  <th className="px-6 py-4 text-left text-base font-bold text-red-700 uppercase tracking-wider">Weight</th>
                   <th className="px-6 py-4 text-left text-base font-bold text-red-700 uppercase tracking-wider">Role</th> {/* Role column */}
                   <th className="px-6 py-4 text-left text-base font-bold text-red-700 uppercase tracking-wider rounded-tr-2xl">Actions</th>
                 </tr>
@@ -543,7 +542,7 @@ export default function UserManagement() {
               <tbody className="bg-white divide-y divide-red-300">
                 {paginatedUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="text-center py-8 text-gray-400">
+                    <td colSpan={7} className="text-center py-8 text-gray-400">
                       {debouncedSearch ? (
                         <div className="flex flex-col items-center gap-2">
                           <div className="text-lg font-medium">No users found</div>
@@ -587,9 +586,6 @@ export default function UserManagement() {
                         {user.age}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {(user as any).weight || "N/A"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
                         <select
                           className={`border rounded px-2 py-1 text-sm transition-colors ${isAdmin ? 'bg-white hover:bg-gray-50' : 'bg-gray-100 cursor-not-allowed'}`}
                           value={user.isAdmin ? "admin" : user.isDonor ? "donor" : user.isRequester ? "requester" : "user"}
@@ -599,7 +595,7 @@ export default function UserManagement() {
                           <option value="admin" className="text-purple-600 font-medium">Admin</option>
                           <option value="donor" className="text-red-600 font-medium">Donor</option>
                           <option value="requester" className="text-blue-600 font-medium">Requester</option>
-                          <option value="user" className="text-gray-600">User</option>
+                         
                         </select>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -607,7 +603,7 @@ export default function UserManagement() {
                           {isAdmin && (
                             <Button
                               size="sm"
-                              className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full border border-blue-200 hover:bg-blue-200 transition font-semibold flex items-center justify-center"
+                              className="bg-green-100 text-green-600 px-2 py-1 rounded-full border border-green-200 hover:bg-green-200 transition font-semibold flex items-center justify-center"
                               onClick={() => handleOpenUpdateModal(user)}
                               title="Update User"
                             >
@@ -618,7 +614,7 @@ export default function UserManagement() {
                             user.isSuspended ? (
                               <Button
                                 size="sm"
-                                className="bg-green-100 text-green-600 px-2 py-1 rounded-full border border-green-200 hover:bg-green-200 transition font-semibold flex items-center justify-center"
+                                className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full border border-gray-200 hover:bg-gray-200 transition font-semibold flex items-center justify-center"
                                 onClick={() => handleUnsuspend(user._id)}
                                 title="Unsuspend User"
                               >
@@ -627,11 +623,11 @@ export default function UserManagement() {
                             ) : (
                               <Button
                                 size="sm"
-                                className="bg-red-100 text-red-600 px-2 py-1 rounded-full border border-red-200 hover:bg-red-200 transition font-semibold flex items-center justify-center"
+                                className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full border border-blue-200 hover:bg-blue-200 transition font-semibold flex items-center justify-center"
                                 onClick={() => handleSuspend(user._id)}
                                 title="Suspend User"
                               >
-                                <Ban className="w-4 h-4" />
+                                <Eye className="w-4 h-4" />
                               </Button>
                             )
                           )}
