@@ -68,14 +68,32 @@ function Router() {
       }
     };
 
+    const handleDOMContentLoaded = () => {
+      // This will trigger when DOM is ready
+      if (!isAuthenticated() && window.location.pathname !== "/login") {
+        setLocation("/login");
+      }
+    };
+
+    const handlePageShow = () => {
+      // This will trigger on page show (including back/forward navigation)
+      if (!isAuthenticated() && window.location.pathname !== "/login") {
+        setLocation("/login");
+      }
+    };
+
     window.addEventListener('beforeunload', handleBeforeUnload);
     window.addEventListener('focus', handleFocus);
     window.addEventListener('load', handleLoad);
+    window.addEventListener('DOMContentLoaded', handleDOMContentLoaded);
+    window.addEventListener('pageshow', handlePageShow);
 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('load', handleLoad);
+      window.removeEventListener('DOMContentLoaded', handleDOMContentLoaded);
+      window.removeEventListener('pageshow', handlePageShow);
     };
   }, [setLocation]);
 
