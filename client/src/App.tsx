@@ -14,7 +14,10 @@ import { useEffect } from "react";
 
 function isAuthenticated(): boolean {
   const token = localStorage.getItem("token");
-  return Boolean(token && token !== "undefined" && token !== "null" && token !== "false");
+  const userStr = localStorage.getItem("user");
+  const hasUser = Boolean(userStr && userStr !== "undefined" && userStr !== "null");
+  const hasToken = Boolean(token && token !== "undefined" && token !== "null" && token !== "false");
+  return hasToken && hasUser;
 }
 
 function Protected(Component: React.ComponentType) {
@@ -24,13 +27,12 @@ function Protected(Component: React.ComponentType) {
 }
 
 function Router() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
 
   useEffect(() => {
     const currentPath = window.location.pathname;
     const loggedIn = isAuthenticated();
 
-    // Redirect rules
     if (!loggedIn && currentPath !== "/login") {
       setLocation("/login");
       return;
@@ -38,13 +40,13 @@ function Router() {
     if (loggedIn && (currentPath === "/" || currentPath === "/login" || currentPath === "/index" || currentPath === "/index.html")) {
       setLocation("/dashboard");
     }
-  }, []);
+  }, [location]);
 
   return (
     <Switch>
       <Route path="/login" component={LoginPage} />
       <Route path="/index.html" component={LoginPage} />
-      <Route path="/" component={isAuthenticated() ? Dashboard : LoginPage} />
+      <Route path="/" component={Protected(Dashboard)} />
       <Route path="/dashboard" component={Protected(Dashboard)} />
       <Route path="/users" component={Protected(UserManagement)} />
       <Route path="/donors-list" component={Protected(DonorsList)} />
