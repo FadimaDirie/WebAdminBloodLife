@@ -44,6 +44,32 @@ function Router() {
     }
   }, [location, setLocation]); // Run on every location change and refresh
 
+  // Add event listeners for refresh and page focus
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // This will trigger on refresh
+      if (!isAuthenticated()) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
+    };
+
+    const handleFocus = () => {
+      // This will trigger when page regains focus (including after refresh)
+      if (!isAuthenticated() && window.location.pathname !== "/login") {
+        setLocation("/login");
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [setLocation]);
+
   return (
     <Switch>
       <Route path="/login" component={LoginPage} />
