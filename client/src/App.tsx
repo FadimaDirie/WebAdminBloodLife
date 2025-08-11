@@ -27,75 +27,15 @@ function Protected(Component: React.ComponentType) {
 }
 
 function Router() {
-  const [location, setLocation] = useLocation();
+  const [, setLocation] = useLocation();
 
+  // Always redirect to /login on initial load (refresh/open), regardless of auth
   useEffect(() => {
     const currentPath = window.location.pathname;
-    const loggedIn = isAuthenticated();
-
-    // Only redirect if not logged in and not already on login page
-    if (!loggedIn && currentPath !== "/login" && currentPath !== "/index.html") {
+    if (currentPath !== "/login") {
       setLocation("/login");
-      return;
     }
-    // Only redirect to dashboard if logged in and on login-related pages
-    if (loggedIn && (currentPath === "/" || currentPath === "/login" || currentPath === "/index" || currentPath === "/index.html")) {
-      setLocation("/dashboard");
-    }
-  }, [location, setLocation]); // Run on every location change and refresh
-
-  // Add event listeners for refresh and page focus
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      // This will trigger on refresh
-      if (!isAuthenticated()) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-      }
-    };
-
-    const handleFocus = () => {
-      // This will trigger when page regains focus (including after refresh)
-      if (!isAuthenticated() && window.location.pathname !== "/login") {
-        setLocation("/login");
-      }
-    };
-
-    const handleLoad = () => {
-      // This will trigger on every page load/refresh
-      if (!isAuthenticated() && window.location.pathname !== "/login") {
-        setLocation("/login");
-      }
-    };
-
-    const handleDOMContentLoaded = () => {
-      // This will trigger when DOM is ready
-      if (!isAuthenticated() && window.location.pathname !== "/login") {
-        setLocation("/login");
-      }
-    };
-
-    const handlePageShow = () => {
-      // This will trigger on page show (including back/forward navigation)
-      if (!isAuthenticated() && window.location.pathname !== "/login") {
-        setLocation("/login");
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('load', handleLoad);
-    window.addEventListener('DOMContentLoaded', handleDOMContentLoaded);
-    window.addEventListener('pageshow', handlePageShow);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('load', handleLoad);
-      window.removeEventListener('DOMContentLoaded', handleDOMContentLoaded);
-      window.removeEventListener('pageshow', handlePageShow);
-    };
-  }, [setLocation]);
+  }, []);
 
   return (
     <Switch>
