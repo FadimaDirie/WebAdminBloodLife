@@ -34,7 +34,7 @@ const navigation = [
 ];
 
 export default function Sidebar({ open, onClose }: SidebarProps) {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
 
   return (
     <>
@@ -97,7 +97,11 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           <Button
             variant="outline"
             className="w-full flex items-center gap-3 justify-center text-white border-white/30 hover:bg-red-800 mt-10 bg-gradient-to-r from-red-600 to-red-800 py-3 text-lg shadow-lg transition-all duration-200"
-            onClick={() => { window.location.href = '/login'; }}
+            onClick={() => { 
+              localStorage.removeItem("token");
+              localStorage.removeItem("user");
+              setLocation('/login');
+            }}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" /></svg>
             <span className="font-bold tracking-wide">Logout</span>

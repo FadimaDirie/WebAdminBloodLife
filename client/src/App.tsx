@@ -19,15 +19,22 @@ function Router() {
 
   useEffect(() => {
     // if not logged in and not already on /login, redirect to login
-    if (!isLoggedIn && window.location.pathname !== "/login") {
+    const currentPath = window.location.pathname;
+    if (!isLoggedIn && currentPath !== "/login") {
       setLocation("/login");
+      return;
+    }
+    // if already logged in and on /login, send to dashboard
+    if (isLoggedIn && currentPath === "/login") {
+      setLocation("/dashboard");
     }
   }, [isLoggedIn]);
 
   return (
     <Switch>
       <Route path="/login" component={LoginPage} />
-      <Route path="/" component={Dashboard} />
+      <Route path="/index.html" component={LoginPage} />
+      <Route path="/" component={isLoggedIn ? Dashboard : LoginPage} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/users" component={UserManagement} />
       <Route path="/donors-list" component={DonorsList} />
