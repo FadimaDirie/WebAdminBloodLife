@@ -12,34 +12,44 @@ import DonorStats from "@/pages/donor-stats";
 import RecentDonations from "@/pages/recent-donations";
 import { useEffect } from "react";
 
+function isAuthenticated(): boolean {
+  const token = localStorage.getItem("token");
+  return Boolean(token && token !== "undefined" && token !== "null" && token !== "false");
+}
+
+function Protected(Component: React.ComponentType) {
+  return function ProtectedComponent() {
+    return isAuthenticated() ? <Component /> : <LoginPage />;
+  };
+}
+
 function Router() {
   const [, setLocation] = useLocation();
 
-  const isLoggedIn = !!localStorage.getItem("token");
-
   useEffect(() => {
-    // if not logged in and not already on /login, redirect to login
     const currentPath = window.location.pathname;
-    if (!isLoggedIn && currentPath !== "/login") {
+    const loggedIn = isAuthenticated();
+
+    // Redirect rules
+    if (!loggedIn && currentPath !== "/login") {
       setLocation("/login");
       return;
     }
-    // if already logged in and on /login, send to dashboard
-    if (isLoggedIn && currentPath === "/login") {
+    if (loggedIn && (currentPath === "/" || currentPath === "/login" || currentPath === "/index" || currentPath === "/index.html")) {
       setLocation("/dashboard");
     }
-  }, [isLoggedIn]);
+  }, []);
 
   return (
     <Switch>
       <Route path="/login" component={LoginPage} />
       <Route path="/index.html" component={LoginPage} />
-      <Route path="/" component={isLoggedIn ? Dashboard : LoginPage} />
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/users" component={UserManagement} />
-      <Route path="/donors-list" component={DonorsList} />
-      <Route path="/donor-stats" component={DonorStats} />
-      <Route path="/recent-donations" component={RecentDonations} />
+      <Route path="/" component={isAuthenticated() ? Dashboard : LoginPage} />
+      <Route path="/dashboard" component={Protected(Dashboard)} />
+      <Route path="/users" component={Protected(UserManagement)} />
+      <Route path="/donors-list" component={Protected(DonorsList)} />
+      <Route path="/donor-stats" component={Protected(DonorStats)} />
+      <Route path="/recent-donations" component={Protected(RecentDonations)} />
       <Route component={NotFound} />
     </Switch>
   );
