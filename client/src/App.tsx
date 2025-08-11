@@ -10,6 +10,7 @@ import LoginPage from "@/pages/login";
 import DonorsList from "@/pages/donors-list";
 import DonorStats from "@/pages/donor-stats";
 import RecentDonations from "@/pages/recent-donations";
+import TodayDonationsPage from "@/pages/today-donations";
 import { useEffect } from "react";
 
 function isAuthenticated(): boolean {
@@ -47,6 +48,7 @@ function Router() {
       <Route path="/donors-list" component={Protected(DonorsList)} />
       <Route path="/donor-stats" component={Protected(DonorStats)} />
       <Route path="/recent-donations" component={Protected(RecentDonations)} />
+      <Route path="/today-donations" component={Protected(TodayDonationsPage)} />
       <Route component={NotFound} />
     </Switch>
   );

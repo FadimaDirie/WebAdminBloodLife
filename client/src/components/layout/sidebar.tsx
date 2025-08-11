@@ -28,6 +28,7 @@ const navigation = [
   { name: 'Donors List Report', href: '/donors-list', icon: Users },
   { name: 'Donor Distrit Report', href: '/donor-stats', icon: BarChart3 },
   { name: 'Recent Donations Report', href: '/recent-donations', icon: Heart },
+  { name: 'Today Donations', href: '/today-donations', icon: Activity },
   
   { name: 'User Management', href: '/users', icon: Users },
  
