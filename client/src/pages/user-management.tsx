@@ -212,9 +212,13 @@ export default function UserManagement() {
     }
 
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`https://bloods-service-api.onrender.com/api/admin/update-role/${userId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ role: newRole }),
       });
       const data = await res.json();
@@ -251,9 +255,13 @@ export default function UserManagement() {
     }
 
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`https://bloods-service-api.onrender.com/api/admin/suspend/${userId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.msg || "Failed to suspend user");
@@ -276,9 +284,13 @@ export default function UserManagement() {
     }
 
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`https://bloods-service-api.onrender.com/api/admin/unsuspend/${userId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.msg || "Failed to unsuspend user");
@@ -603,7 +615,7 @@ export default function UserManagement() {
                           {isAdmin && (
                             <Button
                               size="sm"
-                              className="bg-green-100 text-green-600 px-2 py-1 rounded-full border border-green-200 hover:bg-green-200 transition font-semibold flex items-center justify-center"
+                              className="bg-green-200 text-green-900 px-2 py-1 rounded-full border border-green-200 hover:bg-green-200 transition font-semibold flex items-center justify-center"
                               onClick={() => handleOpenUpdateModal(user)}
                               title="Update User"
                             >
@@ -623,7 +635,7 @@ export default function UserManagement() {
                             ) : (
                               <Button
                                 size="sm"
-                                className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full border border-blue-200 hover:bg-blue-200 transition font-semibold flex items-center justify-center"
+                                className="bg-blue-200 text-blue-900 px-2 py-1 rounded-full border border-blue-200 hover:bg-blue-200 transition font-semibold flex items-center justify-center"
                                 onClick={() => handleSuspend(user._id)}
                                 title="Suspend User"
                               >
