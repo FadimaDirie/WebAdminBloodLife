@@ -30,11 +30,15 @@ export interface TodayDonation {
 
 interface TodayDonationsTableProps {
   donations: TodayDonation[];
-  onApprove: (id: string) => Promise<void>;
-  loading?: boolean;
+  onApprove: (id: string, requesterId: string) => Promise<void> | void;
+  loading: boolean;
 }
 
-export default function TodayDonationsTable({ donations, onApprove, loading }: TodayDonationsTableProps) {
+export default function TodayDonationsTable({
+  donations,
+  onApprove,
+  loading,
+}: TodayDonationsTableProps) {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -107,7 +111,7 @@ export default function TodayDonationsTable({ donations, onApprove, loading }: T
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-red-400">
-              {paginated.map((d) => {
+              {donations.map((d) => {
                 const isApproved = ["accepted", "confirmed", "verified", "approved"].includes((d.status || "").toLowerCase());
                 return (
                   <tr key={d.id} className="hover:bg-red-100">
@@ -132,7 +136,7 @@ export default function TodayDonationsTable({ donations, onApprove, loading }: T
                         disabled={isApproved || loading}
                         onClick={async () => {
                           try {
-                            await onApprove(d.id);
+                            await onApprove(d.id, d.requesterId?._id);
                           } catch (error) {
                             // Error handling is now done in the parent component
                           }

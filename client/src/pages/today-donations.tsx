@@ -112,31 +112,29 @@ export default function TodayDonationsPage() {
     }
   }, []);
 
-  async function handleApprove(id: string) {
+  async function handleApprove(id: string, requesterId: string) {
     try {
-      // Use the approve order API endpoint
-      const res = await fetch(`https://bloods-service-api.onrender.com/api/orders/approve`, {
+      const res = await fetch(`https://bloods-service-api.onrender.com/api/orders/approveOrderAndRewardDonor`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           orderId: id,
-          userId: donations.find(d => d.id === id)?.requesterId?._id || "",
+          userId: requesterId,
           rewardPoints: 50
         })
       });
-      
+
       if (!res.ok) throw new Error('Failed to approve order');
-      
+
       const result = await res.json();
-      
-      // Update local state with the approved order
-      setDonations((prev) => prev.map((d) => 
-        d.id === id ? { ...d, status: 'approved' } : d
-      ));
-      
-      // Show success message with reward points
-      alert(`Order approved successfully! Donor rewarded ${result.rewardPoints || 50} points.`);
-      
+
+      setDonations((prev) =>
+        prev.map((d) =>
+          d.id === id ? { ...d, status: 'approved' } : d
+        )
+      );
+
+      alert(`Order approved! Donor rewarded ${result.rewardPoints || 50} points.`);
     } catch (error) {
       console.error('Error approving order:', error);
       alert('Failed to approve order. Please try again.');
@@ -154,31 +152,29 @@ export default function TodayDonationsPage() {
     );
   }
 
-  // Filter only today's confirmed donations
-  const todayConfirmedDonations = donations.filter(
-    (d) => d.status === "confirmed" && isToday(d.createdAt)
-  );
+// Filter only today's confirmed donations
+const todayConfirmedDonations = donations.filter(
+  (d) => d.status === "confirmed" && isToday(d.createdAt)
+);
 
-  return (
-    <div className="flex h-screen overflow-hidden bg-red-50">
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div className="flex-col flex-1 overflow-hidden">
-        <Header onMenuClick={() => setSidebarOpen(true)} />
-        <div className="flex-1 overflow-y-auto p-8 w-full max-w-6xl mx-auto">
-
-          {/* Show count above or beside the table */}
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-red-700">
-              Today's Confirmed Donations: {todayConfirmedDonations.length}
-            </h2>
-            {/* Optional: Add approve all button here if needed */}
-          </div>
-
-          {/* Pass only today's confirmed donations to the table */}
-          <TodayDonationsTable donations={todayConfirmedDonations} onApprove={handleApprove} loading={loading} />
+return (
+  <div className="flex h-screen overflow-hidden bg-red-50">
+    <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+    <div className="flex-col flex-1 overflow-hidden">
+      <Header onMenuClick={() => setSidebarOpen(true)} />
+      <div className="flex-1 overflow-y-auto p-8 w-full max-w-6xl mx-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-red-700">
+            Today's Confirmed Donations: {todayConfirmedDonations.length}
+          </h2>
         </div>
+        <TodayDonationsTable
+          donations={todayConfirmedDonations}
+          onApprove={(id, requesterId) => handleApprove(id, requesterId)}
+          loading={loading}
+        />
       </div>
     </div>
-  );
+  </div>
+);
 }
-
