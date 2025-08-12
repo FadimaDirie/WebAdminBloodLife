@@ -107,7 +107,6 @@ export default function TodayDonationsTable({
                 <th className="px-6 py-3 text-left text-xs font-medium text-black-500 uppercase tracking-wider">Location</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-black-500 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-black-500 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-black-500 uppercase tracking-wider text-center">Action</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-red-400">
@@ -130,33 +129,6 @@ export default function TodayDonationsTable({
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{d.hospitalName || d.location || '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap"><Badge className={getStatusColor(d.status)}>{d.status || '-'}</Badge></td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(d.createdAt)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <Button
-                        size="sm"
-                        disabled={isApproved || loading}
-                        onClick={async () => {
-                          try {
-                            console.log('Button clicked for donation:', d.id, 'requesterId:', d.requesterId?._id);
-                            if (!d.requesterId?._id) {
-                              alert('Error: Requester ID not found');
-                              return;
-                            }
-                            await onApprove(d.id, d.requesterId._id);
-                          } catch (error) {
-                            console.error('Error in button click:', error);
-                            alert('Error approving donation. Please try again.');
-                          }
-                        }}
-                        className={`rounded-full px-3 transition-all duration-200 ${
-                          isApproved 
-                            ? 'bg-green-100 text-green-600 border border-green-200 cursor-not-allowed' 
-                            : 'bg-red-500 text-white hover:bg-red-600 hover:scale-105 shadow-lg'
-                        }`}
-                      >
-                        <CheckCircle2 className="w-4 h-4 mr-1" />
-                        {isApproved ? 'Approved' : 'Approve'}
-                      </Button>
-                    </td>
                   </tr>
                 );
               })}
