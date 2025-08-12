@@ -13,7 +13,8 @@ export default function RecentDonations() {
     accepted: 0,
     rejected: 0,
     waiting: 0,
-    confirmed: 0
+    confirmed: 0,
+    approved: 0
   });
 
   useEffect(() => {
@@ -24,7 +25,8 @@ export default function RecentDonations() {
           accepted: data.data?.accepted?.count || 0,
           rejected: data.data?.rejected?.count || 0,
           waiting: data.data?.waiting?.count || 0,
-          confirmed: data.data?.confirmed?.count || 0
+          confirmed: data.data?.confirmed?.count || 0,
+          approved: data.data?.approved?.count || 0
         });
       });
   }, []);
@@ -56,7 +58,7 @@ export default function RecentDonations() {
       <Header onMenuClick={() => setSidebarOpen(true)} />
         <div className="flex-1 overflow-y-auto p-8 w-full max-w-5xl mx-auto">
           {/* Status Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6 mb-8">
             <div className="rounded-xl p-5 bg-green-300 flex flex-col items-center shadow-2xl transition-transform transition-opacity duration-700 hover:scale-105 animate-fadeIn">
               <UserCheck className="w-8 h-8 text-green-600 mb-2" />
               <div className="text-green-700 font-semibold">Accepted</div>
@@ -83,6 +85,13 @@ export default function RecentDonations() {
               <div className="text-blue-700 font-semibold">Confirmed</div>
               <div className="text-3xl font-bold text-gray-800">
                 <CountUp end={statusSummary.confirmed} duration={1.5} />
+              </div>
+            </div>
+            <div className="rounded-xl p-5 bg-purple-100 flex flex-col items-center shadow-2xl transition-transform transition-opacity duration-700 hover:scale-105 animate-fadeIn">
+              <CheckCircle2 className="w-8 h-8 text-purple-600 mb-2" />
+              <div className="text-purple-700 font-semibold">Approved</div>
+              <div className="text-3xl font-bold text-gray-800">
+                <CountUp end={statusSummary.approved} duration={1.5} />
               </div>
             </div>
           </div>

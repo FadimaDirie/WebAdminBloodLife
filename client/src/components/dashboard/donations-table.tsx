@@ -46,6 +46,7 @@ interface DonationsTableProps {
 export default function DonationsTable({ donations }: DonationsTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBloodType, setSelectedBloodType] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -56,7 +57,8 @@ export default function DonationsTable({ donations }: DonationsTableProps) {
     const term = searchTerm.toLowerCase();
     const matchesSearch = donorName.includes(term) || donorId.includes(term) || locationStr.includes(term);
     const matchesBloodType = selectedBloodType === "all" || donation.bloodType === selectedBloodType;
-    return matchesSearch && matchesBloodType;
+    const matchesStatus = selectedStatus === "all" || donation.status?.toLowerCase() === selectedStatus.toLowerCase();
+    return matchesSearch && matchesBloodType && matchesStatus;
   });
 
   const totalPages = Math.ceil(filteredDonations.length / itemsPerPage);
@@ -176,6 +178,21 @@ export default function DonationsTable({ donations }: DonationsTableProps) {
                 <SelectItem value="AB-">AB-</SelectItem>
                 <SelectItem value="O+">O+</SelectItem>
                 <SelectItem value="O-">O-</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="All Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="accepted">Accepted</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value="waiting">Waiting</SelectItem>
+                <SelectItem value="confirmed">Confirmed</SelectItem>
+                <SelectItem value="approved">Approved</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="processing">Processing</SelectItem>
               </SelectContent>
             </Select>
             <Button 
