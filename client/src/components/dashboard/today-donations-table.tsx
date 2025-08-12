@@ -144,7 +144,7 @@ export default function TodayDonationsTable({
                         className={`rounded-full px-3 transition-all duration-200 ${
                           isApproved 
                             ? 'bg-green-100 text-green-600 border border-green-200 cursor-not-allowed' 
-                            : 'bg-green-500 text-white hover:bg-green-600 hover:scale-105 shadow-lg'
+                            : 'bg-red-500 text-white hover:bg-red-600 hover:scale-105 shadow-lg'
                         }`}
                       >
                         <CheckCircle2 className="w-4 h-4 mr-1" />

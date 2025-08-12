@@ -114,6 +114,8 @@ export default function TodayDonationsPage() {
 
   async function handleApprove(id: string, requesterId: string) {
     try {
+      console.log('Approving order:', { orderId: id, userId: requesterId, rewardPoints: 50 });
+      
       const res = await fetch(`https://bloods-service-api.onrender.com/api/orders/approveOrderAndRewardDonor`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -124,9 +126,14 @@ export default function TodayDonationsPage() {
         })
       });
 
-      if (!res.ok) throw new Error('Failed to approve order');
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('API Error Response:', errorText);
+        throw new Error(`Failed to approve order: ${res.status} ${res.statusText}`);
+      }
 
       const result = await res.json();
+      console.log('API Response:', result);
 
       setDonations((prev) =>
         prev.map((d) =>
