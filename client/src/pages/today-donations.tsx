@@ -42,7 +42,9 @@ export default function TodayDonationsPage() {
           const items = Array.isArray(data.orders) ? data.orders : [];
           if (items.length > 0) {
             console.log("Found orders from TodayTransfusions API:", items.length);
-            const mapped: TodayDonation[] = items.map((o: any) => ({
+                      const mapped: TodayDonation[] = items.map((o: any) => {
+            console.log('Mapping order:', o);
+            return {
               id: o._id,
               donorId: o.donorId || null,
               requesterId: o.requesterId || null,
@@ -52,7 +54,8 @@ export default function TodayDonationsPage() {
               bloodType: o.bloodType || undefined,
               unit: o.unit,
               patientName: o.patientName,
-            }));
+            };
+          });
             setDonations(mapped);
             setLoading(false);
             return;
@@ -89,17 +92,20 @@ export default function TodayDonationsPage() {
           const confirmedItems = allItems.filter((o: any) => o.status === 'confirmed');
           console.log("Confirmed orders from all users:", confirmedItems.length);
           
-          const mapped: TodayDonation[] = confirmedItems.map((o: any) => ({
-            id: o._id,
-            donorId: o.donorId || null,
-            requesterId: o.requesterId || null,
-            hospitalName: o.hospitalName || '-',
-            status: o.status || '-',
-            createdAt: o.createdAt,
-            bloodType: o.bloodType || undefined,
-            unit: o.unit,
-            patientName: o.patientName,
-          }));
+          const mapped: TodayDonation[] = confirmedItems.map((o: any) => {
+            console.log('Mapping confirmed order:', o);
+            return {
+              id: o._id,
+              donorId: o.donorId || null,
+              requesterId: o.requesterId || null,
+              hospitalName: o.hospitalName || '-',
+              status: o.status || '-',
+              createdAt: o.createdAt,
+              bloodType: o.bloodType || undefined,
+              unit: o.unit,
+              patientName: o.patientName,
+            };
+          });
           
           console.log("Final mapped donations from all users:", mapped);
           setDonations(mapped);
@@ -163,6 +169,9 @@ export default function TodayDonationsPage() {
 const todayConfirmedDonations = donations.filter(
   (d) => d.status === "confirmed" && isToday(d.createdAt)
 );
+
+console.log('All donations:', donations);
+console.log('Today confirmed donations:', todayConfirmedDonations);
 
 return (
   <div className="flex h-screen overflow-hidden bg-red-50">

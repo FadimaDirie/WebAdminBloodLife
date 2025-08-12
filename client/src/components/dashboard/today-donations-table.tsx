@@ -136,9 +136,15 @@ export default function TodayDonationsTable({
                         disabled={isApproved || loading}
                         onClick={async () => {
                           try {
-                            await onApprove(d.id, d.requesterId?._id);
+                            console.log('Button clicked for donation:', d.id, 'requesterId:', d.requesterId?._id);
+                            if (!d.requesterId?._id) {
+                              alert('Error: Requester ID not found');
+                              return;
+                            }
+                            await onApprove(d.id, d.requesterId._id);
                           } catch (error) {
-                            // Error handling is now done in the parent component
+                            console.error('Error in button click:', error);
+                            alert('Error approving donation. Please try again.');
                           }
                         }}
                         className={`rounded-full px-3 transition-all duration-200 ${
