@@ -19,7 +19,8 @@ import {
   Cell as PieCell
 } from "recharts";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { User, Users, HeartHandshake, ActivitySquare } from "lucide-react";
 import CountUp from 'react-countup';
@@ -60,6 +61,14 @@ export default function Dashboard() {
     { name: "Waiting", value: 0 }
   ]);
   const [donationsByMonth, setDonationsByMonth] = useState<{ month: string; count: number }[]>([]);
+
+  // Custom map pin icon
+  const customIcon = L.icon({
+    iconUrl: "https://cdn0.iconfinder.com/data/icons/small-n-flat/24/map-marker-512.png",
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32]
+  });
 
   useEffect(() => {
     fetch("https://bloods-service-api.onrender.com/api/user/all")
@@ -240,16 +249,10 @@ export default function Dashboard() {
                     >
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                       {mapDonors.map((donor: DonorType, idx: number) => (
-                      <CircleMarker
+                      <Marker
                         key={idx}
-                        center={[donor.latitude, donor.longitude] as [number, number]}
-                        radius={8}
-                        pathOptions={{
-                          fillOpacity: 0.9,
-                          color: "#DC2626",
-                          fillColor: "#DC2626",
-                          weight: 2
-                        }}
+                        position={[donor.latitude, donor.longitude] as [number, number]}
+                        icon={customIcon}
                       >
                         <Popup>
                           <div className="p-2">
@@ -262,7 +265,7 @@ export default function Dashboard() {
                             </div>
                           </div>
                         </Popup>
-                      </CircleMarker>
+                      </Marker>
                     ))}
                   </MapContainer>
                 )}
