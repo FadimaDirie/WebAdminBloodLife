@@ -243,15 +243,24 @@ export default function Dashboard() {
                       <CircleMarker
                         key={idx}
                         center={[donor.latitude, donor.longitude] as [number, number]}
+                        radius={8}
                         pathOptions={{
-                          radius: 6,
-                          fillOpacity: 0.8,
-                          color: "#DC2626"
+                          fillOpacity: 0.9,
+                          color: "#DC2626",
+                          fillColor: "#DC2626",
+                          weight: 2
                         }}
                       >
                         <Popup>
-                          <strong>{donor.fullName}</strong><br />
-                          Blood Type: {donor.bloodType}
+                          <div className="p-2">
+                            <div className="font-bold text-red-600 mb-1">{donor.fullName}</div>
+                            <div className="text-sm text-gray-600">
+                              <span className="font-semibold">Blood Type:</span> {donor.bloodType}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              Location: {donor.latitude.toFixed(4)}, {donor.longitude.toFixed(4)}
+                            </div>
+                          </div>
                         </Popup>
                       </CircleMarker>
                     ))}
