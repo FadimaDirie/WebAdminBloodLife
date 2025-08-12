@@ -143,13 +143,39 @@ export default function TodayDonationsPage() {
     }
   }
 
+  // Helper function to check if date is today
+  function isToday(dateString: string) {
+    const date = new Date(dateString);
+    const today = new Date();
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    );
+  }
+
+  // Filter only today's confirmed donations
+  const todayConfirmedDonations = donations.filter(
+    (d) => d.status === "confirmed" && isToday(d.createdAt)
+  );
+
   return (
     <div className="flex h-screen overflow-hidden bg-red-50">
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-col flex-1 overflow-hidden">
         <Header onMenuClick={() => setSidebarOpen(true)} />
         <div className="flex-1 overflow-y-auto p-8 w-full max-w-6xl mx-auto">
-          <TodayDonationsTable donations={donations} onApprove={handleApprove} loading={loading} />
+
+          {/* Show count above or beside the table */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-red-700">
+              Today's Confirmed Donations: {todayConfirmedDonations.length}
+            </h2>
+            {/* Optional: Add approve all button here if needed */}
+          </div>
+
+          {/* Pass only today's confirmed donations to the table */}
+          <TodayDonationsTable donations={todayConfirmedDonations} onApprove={handleApprove} loading={loading} />
         </div>
       </div>
     </div>
