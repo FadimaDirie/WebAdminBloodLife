@@ -10,24 +10,54 @@ export default function TodayDonationsPage() {
 
   // Load today's confirmed donations using the TodayTransfusions API endpoint
   useEffect(() => {
-    fetch(`https://bloods-service-api.onrender.com/api/orders/TodayTransfusions`)
-      .then((res) => res.json())
-      .then((data) => {
-        const items = Array.isArray(data.orders) ? data.orders : [];
-        const mapped: TodayDonation[] = items.map((o: any) => ({
-          id: o._id,
-          donorId: o.donorId || null,
-          requesterId: o.requesterId || null,
-          hospitalName: o.hospitalName || '-',
-          status: o.status || '-',
-          createdAt: o.createdAt,
-          bloodType: o.bloodType || undefined,
-          unit: o.unit,
-          patientName: o.patientName,
-        }));
-        setDonations(mapped);
+    // Get userId from localStorage
+    const userStr = localStorage.getItem("user");
+    
+    if (!userStr) {
+      setLoading(false);
+      return; // Don't make API call if no user
+    }
+
+    try {
+      const user = JSON.parse(userStr);
+      const userId = user._id;
+      
+      if (!userId) {
+        setLoading(false);
+        return; // Don't make API call if no userId
+      }
+
+      fetch(`https://bloods-service-api.onrender.com/api/orders/TodayTransfusions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: userId })
       })
-      .finally(() => setLoading(false));
+        .then((res) => res.json())
+        .then((data) => {
+          const items = Array.isArray(data.orders) ? data.orders : [];
+          const mapped: TodayDonation[] = items.map((o: any) => ({
+            id: o._id,
+            donorId: o.donorId || null,
+            requesterId: o.requesterId || null,
+            hospitalName: o.hospitalName || '-',
+            status: o.status || '-',
+            createdAt: o.createdAt,
+            bloodType: o.bloodType || undefined,
+            unit: o.unit,
+            patientName: o.patientName,
+          }));
+          setDonations(mapped);
+        })
+        .catch((error) => {
+          console.error("Error fetching today's donations:", error);
+          setDonations([]);
+        })
+        .finally(() => setLoading(false));
+
+    } catch (error) {
+      console.error("Error parsing user from localStorage:", error);
+      setLoading(false);
+    }
   }, []);
 
   async function handleApprove(id: string) {
@@ -64,7 +94,7 @@ export default function TodayDonationsPage() {
   return (
     <div className="flex h-screen overflow-hidden bg-red-50">
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex-col flex-1 overflow-hidden">
         <Header onMenuClick={() => setSidebarOpen(true)} />
         <div className="flex-1 overflow-y-auto p-8 w-full max-w-6xl mx-auto">
           <TodayDonationsTable donations={donations} onApprove={handleApprove} loading={loading} />
