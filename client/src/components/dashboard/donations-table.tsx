@@ -69,22 +69,24 @@ export default function DonationsTable({ donations }: DonationsTableProps) {
   const getStatusColor = (status: string) => {
     const statusLower = status.toLowerCase();
     switch (statusLower) {
-      case 'verified':
       case 'accepted':
+        return 'bg-green-500 text-white font-semibold';
       case 'confirmed':
-        return 'bg-green-100 text-green-800';
-      case 'processing':
+        return 'bg-blue-500 text-white font-semibold';
+      case 'approved':
+        return 'bg-purple-500 text-white font-semibold';
       case 'waiting':
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+      case 'processing':
+        return 'bg-yellow-500 text-white font-semibold';
       case 'rejected':
       case 'cancelled':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-500 text-white font-semibold';
       case 'completed':
       case 'used':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-indigo-500 text-white font-semibold';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-500 text-white font-semibold';
     }
   };
 
