@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import TodayDonationsTable, { TodayDonation } from "@/components/dashboard/today-donations-table";
@@ -8,36 +8,30 @@ export default function TodayDonationsPage() {
   const [donations, setDonations] = useState<TodayDonation[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load only today's donations
+  // Load today's confirmed donations using the new API endpoint
   useEffect(() => {
-    const todayISO = new Date();
-    todayISO.setHours(0, 0, 0, 0);
-    const from = todayISO.toISOString();
-
-    fetch(`https://bloods-service-api.onrender.com/api/orders/recent`)
+    fetch(`https://bloods-service-api.onrender.com/api/orders/TodayTransfusions`)
       .then((res) => res.json())
       .then((data) => {
         const items = Array.isArray(data.orders) ? data.orders : [];
-        const mapped: TodayDonation[] = items
-          .filter((o: any) => new Date(o.createdAt).getTime() >= new Date(from).getTime())
-          .map((o: any) => ({
-            id: o._id,
-            donorId: o.donorId || null,
-            requesterId: o.requesterId || null,
-            hospitalName: o.hospitalName || '-',
-            status: o.status || '-'
-            ,
-            createdAt: o.createdAt,
-            bloodType: o.bloodType || undefined,
-          }));
+        const mapped: TodayDonation[] = items.map((o: any) => ({
+          id: o._id,
+          donorId: o.donorId || null,
+          requesterId: o.requesterId || null,
+          hospitalName: o.hospitalName || '-',
+          status: o.status || '-',
+          createdAt: o.createdAt,
+          bloodType: o.bloodType || undefined,
+          unit: o.unit,
+          patientName: o.patientName,
+        }));
         setDonations(mapped);
       })
       .finally(() => setLoading(false));
   }, []);
 
   async function handleApprove(id: string) {
-    // Guess endpoint: update order status to confirmed
-    // If your API differs, change it here
+    // Update order status to confirmed using the new API endpoint
     const res = await fetch(`https://bloods-service-api.onrender.com/api/orders/${id}/status`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },

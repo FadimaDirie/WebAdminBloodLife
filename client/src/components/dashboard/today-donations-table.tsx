@@ -24,6 +24,8 @@ export interface TodayDonation {
   status: string;
   createdAt: string;
   bloodType?: string;
+  unit?: number;
+  patientName?: string;
 }
 
 interface TodayDonationsTableProps {
@@ -96,6 +98,8 @@ export default function TodayDonationsTable({ donations, onApprove, loading }: T
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-black-500 uppercase tracking-wider">Donor</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-black-500 uppercase tracking-wider">Blood</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-black-500 uppercase tracking-wider">Unit (ml)</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-black-500 uppercase tracking-wider">Patient</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-black-500 uppercase tracking-wider">Location</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-black-500 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-black-500 uppercase tracking-wider">Date</th>
@@ -117,6 +121,8 @@ export default function TodayDonationsTable({ donations, onApprove, loading }: T
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{d.bloodType || "-"}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{d.unit || "-"}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{d.patientName || "-"}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{d.hospitalName || d.location || '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap"><Badge className={getStatusColor(d.status)}>{d.status || '-'}</Badge></td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(d.createdAt)}</td>
