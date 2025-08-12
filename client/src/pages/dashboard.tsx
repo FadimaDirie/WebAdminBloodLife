@@ -19,7 +19,7 @@ import {
   Cell as PieCell
 } from "recharts";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { MapContainer, TileLayer, CircleMarker, Popup, MapContainerProps, CircleMarkerProps } from "react-leaflet";
+import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { User, Users, HeartHandshake, ActivitySquare } from "lucide-react";
 import CountUp from 'react-countup';
@@ -232,15 +232,22 @@ export default function Dashboard() {
                 {loadingMap ? (
                   <div className="flex items-center justify-center h-full text-gray-400">Loading map...</div>
                 ) : (
-                    <MapContainer center={[2.0469, 45.3182]} zoom={5} style={{ height: "100%", width: "100%" }}>
+                    <MapContainer 
+                      center={[2.0469, 45.3182] as [number, number]} 
+                      zoom={5} 
+                      style={{ height: "100%", width: "100%" }}
+                      scrollWheelZoom={false}
+                    >
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                       {mapDonors.map((donor: DonorType, idx: number) => (
                       <CircleMarker
                         key={idx}
-                        center={[donor.latitude, donor.longitude]}
-                        radius={6}
-                        fillOpacity={0.8}
-                        color="#DC2626"
+                        center={[donor.latitude, donor.longitude] as [number, number]}
+                        pathOptions={{
+                          radius: 6,
+                          fillOpacity: 0.8,
+                          color: "#DC2626"
+                        }}
                       >
                         <Popup>
                           <strong>{donor.fullName}</strong><br />
