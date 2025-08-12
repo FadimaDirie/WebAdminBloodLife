@@ -133,12 +133,15 @@ export default function TodayDonationsTable({ donations, onApprove, loading }: T
                         onClick={async () => {
                           try {
                             await onApprove(d.id);
-                            toast({ title: "Approved", description: "Donation marked as approved." });
-                          } catch {
-                            toast({ title: "Action failed", description: "Could not approve. Try again.", variant: "destructive" });
+                          } catch (error) {
+                            // Error handling is now done in the parent component
                           }
                         }}
-                        className={`rounded-full px-3 ${isApproved ? 'bg-green-100 text-green-500' : 'bg-green-500 text-white hover:bg-green-600'}`}
+                        className={`rounded-full px-3 transition-all duration-200 ${
+                          isApproved 
+                            ? 'bg-green-100 text-green-600 border border-green-200 cursor-not-allowed' 
+                            : 'bg-green-500 text-white hover:bg-green-600 hover:scale-105 shadow-lg'
+                        }`}
                       >
                         <CheckCircle2 className="w-4 h-4 mr-1" />
                         {isApproved ? 'Approved' : 'Approve'}

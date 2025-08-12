@@ -8,7 +8,7 @@ export default function TodayDonationsPage() {
   const [donations, setDonations] = useState<TodayDonation[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load today's confirmed donations using the new API endpoint
+  // Load today's confirmed donations using the TodayTransfusions API endpoint
   useEffect(() => {
     fetch(`https://bloods-service-api.onrender.com/api/orders/TodayTransfusions`)
       .then((res) => res.json())
@@ -31,14 +31,34 @@ export default function TodayDonationsPage() {
   }, []);
 
   async function handleApprove(id: string) {
-    // Update order status to confirmed using the new API endpoint
-    const res = await fetch(`https://bloods-service-api.onrender.com/api/orders/${id}/status`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'confirmed' })
-    });
-    if (!res.ok) throw new Error('Failed');
-    setDonations((prev) => prev.map((d) => (d.id === id ? { ...d, status: 'confirmed' } : d)));
+    try {
+      // Use the approve order API endpoint
+      const res = await fetch(`https://bloods-service-api.onrender.com/api/orders/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: id,
+          userId: donations.find(d => d.id === id)?.requesterId?._id || "",
+          rewardPoints: 50
+        })
+      });
+      
+      if (!res.ok) throw new Error('Failed to approve order');
+      
+      const result = await res.json();
+      
+      // Update local state with the approved order
+      setDonations((prev) => prev.map((d) => 
+        d.id === id ? { ...d, status: 'approved' } : d
+      ));
+      
+      // Show success message with reward points
+      alert(`Order approved successfully! Donor rewarded ${result.rewardPoints || 50} points.`);
+      
+    } catch (error) {
+      console.error('Error approving order:', error);
+      alert('Failed to approve order. Please try again.');
+    }
   }
 
   return (
