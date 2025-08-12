@@ -61,7 +61,7 @@ export default function LoginPage() {
           <p className="mb-1">{user.email}</p>
           <p className="mb-1">{user.city}</p>
           <p className="mb-1">Blood Type: {user.bloodType}</p>
-          <Button className="mt-4 w-full" onClick={() => { localStorage.removeItem("token"); localStorage.removeItem("user"); setUser(null); navigate('/login'); }}>Logout</Button>
+          <Button className="mt-4 w-full" onClick={() => setUser(null)}>Logout</Button>
         </div>
       </div>
     );

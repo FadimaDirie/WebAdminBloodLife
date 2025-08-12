@@ -10,26 +10,22 @@ export default function TodayDonationsPage() {
 
   // Load today's confirmed donations using the TodayTransfusions API endpoint
   useEffect(() => {
-    // Get userId from localStorage
+    // First try to get user from localStorage
     const userStr = localStorage.getItem("user");
+    let userId = null;
     
-    if (!userStr) {
-      console.log("No user found in localStorage");
-      setLoading(false);
-      return; // Don't make API call if no user
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        userId = user._id;
+      } catch (error) {
+        console.error("Error parsing user from localStorage:", error);
+      }
     }
 
-    try {
-      const user = JSON.parse(userStr);
-      const userId = user._id;
-      
-      if (!userId) {
-        console.log("No userId found in user object");
-        setLoading(false);
-        return; // Don't make API call if no userId
-      }
-
-      console.log("Making API call with userId:", userId);
+    // Try TodayTransfusions API first if we have a userId
+    if (userId) {
+      console.log("Trying TodayTransfusions API with userId:", userId);
       
       fetch(`https://bloods-service-api.onrender.com/api/orders/TodayTransfusions`, {
         method: 'POST',
@@ -37,14 +33,63 @@ export default function TodayDonationsPage() {
         body: JSON.stringify({ userId: userId })
       })
         .then((res) => {
-          console.log("API response status:", res.status);
+          console.log("TodayTransfusions API response status:", res.status);
           return res.json();
         })
         .then((data) => {
-          console.log("API response data:", data);
+          console.log("TodayTransfusions API response data:", data);
+          
           const items = Array.isArray(data.orders) ? data.orders : [];
-          console.log("Mapped items:", items);
-          const mapped: TodayDonation[] = items.map((o: any) => ({
+          if (items.length > 0) {
+            console.log("Found orders from TodayTransfusions API:", items.length);
+            const mapped: TodayDonation[] = items.map((o: any) => ({
+              id: o._id,
+              donorId: o.donorId || null,
+              requesterId: o.requesterId || null,
+              hospitalName: o.hospitalName || '-',
+              status: o.status || '-',
+              createdAt: o.createdAt,
+              bloodType: o.bloodType || undefined,
+              unit: o.unit,
+              patientName: o.patientName,
+            }));
+            setDonations(mapped);
+            setLoading(false);
+            return;
+          }
+          
+          // If no orders found, get all confirmed orders from all users
+          console.log("No orders found in TodayTransfusions, getting all confirmed orders...");
+          return fetchAllConfirmedOrders();
+        })
+        .catch((error) => {
+          console.log("TodayTransfusions API failed, getting all confirmed orders...");
+          return fetchAllConfirmedOrders();
+        });
+    } else {
+      // No userId, get all confirmed orders from all users
+      console.log("No userId, getting all confirmed orders...");
+      fetchAllConfirmedOrders();
+    }
+
+    // Function to fetch all confirmed orders from all users
+    function fetchAllConfirmedOrders() {
+      fetch("https://bloods-service-api.onrender.com/api/orders/recent")
+        .then((res) => {
+          console.log("All orders API response status:", res.status);
+          return res.json();
+        })
+        .then((data) => {
+          console.log("All orders API response data:", data);
+          
+          const allItems = Array.isArray(data.orders) ? data.orders : [];
+          console.log("Total orders from all users:", allItems.length);
+          
+          // Filter only confirmed orders from all users
+          const confirmedItems = allItems.filter((o: any) => o.status === 'confirmed');
+          console.log("Confirmed orders from all users:", confirmedItems.length);
+          
+          const mapped: TodayDonation[] = confirmedItems.map((o: any) => ({
             id: o._id,
             donorId: o.donorId || null,
             requesterId: o.requesterId || null,
@@ -55,18 +100,15 @@ export default function TodayDonationsPage() {
             unit: o.unit,
             patientName: o.patientName,
           }));
-          console.log("Final mapped donations:", mapped);
+          
+          console.log("Final mapped donations from all users:", mapped);
           setDonations(mapped);
         })
         .catch((error) => {
-          console.error("Error fetching today's donations:", error);
+          console.error("Error fetching all confirmed orders:", error);
           setDonations([]);
         })
         .finally(() => setLoading(false));
-
-    } catch (error) {
-      console.error("Error parsing user from localStorage:", error);
-      setLoading(false);
     }
   }, []);
 
