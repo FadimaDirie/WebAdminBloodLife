@@ -133,7 +133,7 @@ export default function TodayDonationsTable({
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <Button
                         size="sm"
-                        disabled={isApproved || loading}
+                        disabled={loading}
                         onClick={async () => {
                           try {
                             console.log('Button clicked for donation:', d.id, 'requesterId:', d.requesterId?._id);
@@ -141,20 +141,53 @@ export default function TodayDonationsTable({
                               alert('Error: Requester ID not found');
                               return;
                             }
+                            
+                            // Show loading state
+                            const button = event.target as HTMLButtonElement;
+                            const originalText = button.innerHTML;
+                            button.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> Loading...';
+                            button.disabled = true;
+                            
+                            // Call the API to approve the order
+                            const res = await fetch(`https://bloods-service-api.onrender.com/api/orders/approveOrderAndRewardDonor`, {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                orderId: d.id,
+                                userId: d.requesterId._id,
+                                rewardPoints: 50
+                              })
+                            });
+
+                            if (!res.ok) {
+                              const errorText = await res.text();
+                              console.error('API Error Response:', errorText);
+                              throw new Error(`Failed to approve order: ${res.status} ${res.statusText}`);
+                            }
+
+                            const result = await res.json();
+                            console.log('API Response:', result);
+
+                            // Show success message with response details
+                            alert(`✅ Order approved successfully!\n\nDonor: ${result.order?.donorId?.fullName || 'Unknown'}\nPatient: ${result.order?.patientName || 'Unknown'}\nHospital: ${result.order?.hospitalName || 'Unknown'}\nReward Points: ${result.rewardPoints || 50}\nStatus: ${result.order?.status || 'approved'}`);
+
+                            // Call the parent onApprove function to update the UI
                             await onApprove(d.id, d.requesterId._id);
+                            
                           } catch (error) {
                             console.error('Error in button click:', error);
-                            alert('Error approving donation. Please try again.');
+                            alert('❌ Error approving donation. Please try again.');
+                          } finally {
+                            // Restore button state
+                            const button = event.target as HTMLButtonElement;
+                            button.innerHTML = originalText;
+                            button.disabled = false;
                           }
                         }}
-                        className={`rounded-full px-3 transition-all duration-200 ${
-                          isApproved 
-                            ? 'bg-green-100 text-green-600 border border-green-200 cursor-not-allowed' 
-                            : 'bg-red-500 text-white hover:bg-red-600 hover:scale-105 shadow-lg'
-                        }`}
+                        className="bg-red-500 text-white hover:bg-red-600 hover:scale-105 shadow-lg rounded-full px-3 transition-all duration-200"
                       >
                         <CheckCircle2 className="w-4 h-4 mr-1" />
-                        {isApproved ? 'Approved' : 'Approve'}
+                        Approve
                       </Button>
                     </td>
                   </tr>
