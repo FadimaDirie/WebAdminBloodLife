@@ -14,6 +14,7 @@ export default function TodayDonationsPage() {
     const userStr = localStorage.getItem("user");
     
     if (!userStr) {
+      console.log("No user found in localStorage");
       setLoading(false);
       return; // Don't make API call if no user
     }
@@ -23,18 +24,26 @@ export default function TodayDonationsPage() {
       const userId = user._id;
       
       if (!userId) {
+        console.log("No userId found in user object");
         setLoading(false);
         return; // Don't make API call if no userId
       }
 
+      console.log("Making API call with userId:", userId);
+      
       fetch(`https://bloods-service-api.onrender.com/api/orders/TodayTransfusions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: userId })
       })
-        .then((res) => res.json())
+        .then((res) => {
+          console.log("API response status:", res.status);
+          return res.json();
+        })
         .then((data) => {
+          console.log("API response data:", data);
           const items = Array.isArray(data.orders) ? data.orders : [];
+          console.log("Mapped items:", items);
           const mapped: TodayDonation[] = items.map((o: any) => ({
             id: o._id,
             donorId: o.donorId || null,
@@ -46,6 +55,7 @@ export default function TodayDonationsPage() {
             unit: o.unit,
             patientName: o.patientName,
           }));
+          console.log("Final mapped donations:", mapped);
           setDonations(mapped);
         })
         .catch((error) => {
